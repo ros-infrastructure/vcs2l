@@ -42,6 +42,13 @@ def get_parser():
         default=False,
         help='Export unique tag names or commit hashes instead of branch names',
     )
+    group.add_argument(
+        '--lint',
+        action='store_true',
+        default=False,
+        help='Format output for compatibility with yamllint',
+    )
+
     return parser
 
 
@@ -123,9 +130,13 @@ def main(args=None, stdout=None, stderr=None):
             else:
                 result['path'] = os.path.join(basename, result['path'])
 
+    if args.lint:
+        print('---')
     print('repositories:')
     output_results(results, output_handler=output_export_data)
     output_results(results, output_handler=output_error_information)
+    if args.lint:
+        print('...')
 
     any_error = any(r['returncode'] for r in results)
     return 1 if any_error else 0
