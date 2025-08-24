@@ -90,6 +90,31 @@ The `import` command also supports input in the [rosinstall file format](http://
 
 Only for this command vcs2l supports the pseudo clients `tar` and `zip` which fetch a tarball / zipfile from a URL and unpack its content. For those two types the `version` key is optional. If specified only entries from the archive which are in the subfolder specified by the version value are being extracted.
 
+### Import with extends functionality
+
+The `vcs import` command supports an `extends` key at the top level of the YAML file.
+The value of that key is a path or URL to another YAML file which is imported first.
+This parent file can itself also contain the key to chain multiple files.
+The child is given precedence over the parent in case of duplicate repository entries.
+In order to avoid infinite loops in case of circular imports the tool detects already imported files and raises an error if such a file is encountered again.
+
+```yaml
+# parent.repos
+repositories:
+  vcs2l:
+    type: git
+    url: git@github.com:ros-infrastructure/vcs2l.git
+    version: main
+
+# child.repos
+extends: parent.repos
+repositories:
+  vcs2l:
+    type: git
+    url: https://github.com/ros-infrastructure/vcs2l.git
+    version: 1.1.5
+```
+
 ### Delete set of repositories
 
 The `vcs delete` command removes all directories of repositories which are passed in via `stdin` in YAML format.

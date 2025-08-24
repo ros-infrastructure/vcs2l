@@ -14,6 +14,21 @@ from . import StagedReposFile, StagedReposFile2, to_file_url
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+<<<<<<< HEAD
+=======
+from vcs2l.clients.git import GitClient  # noqa: E402
+from vcs2l.util import rmtree  # noqa: E402
+
+file_uri_scheme = 'file://' if sys.platform != 'win32' else 'file:///'
+
+REPOS_FILE = os.path.join(os.path.dirname(__file__), 'list.repos')
+REPOS_FILE_URL = file_uri_scheme + REPOS_FILE
+REPOS2_FILE = os.path.join(os.path.dirname(__file__), 'list2.repos')
+REPOS_EXTENDS_FILE = os.path.join(os.path.dirname(__file__), 'list_extends.repos')
+REPOS_EXTENDS_LOOP_FILE = os.path.join(
+    os.path.dirname(__file__), 'list_extends_loop_child.repos'
+)
+>>>>>>> b186be5 (Added support for inheritance in importing repository files.)
 BAD_REPOS_FILE = os.path.join(os.path.dirname(__file__), 'bad.repos')
 TEST_WORKSPACE = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'test_workspace'
@@ -270,18 +285,24 @@ class TestCommands(StagedReposFile):
         finally:
             rmtree(workdir)
 
-    def test_import_url(self):
-        workdir = os.path.join(TEST_WORKSPACE, 'import-url')
+    def import_common(self, import_file, repos_file):
+        """Common test function for import operations
+
+        Args:
+            import_file: Assertion expected output file name (without .txt)
+            repos_file: path to the .repos file to use
+        """
+        workdir = os.path.join(TEST_WORKSPACE, import_file)
         os.makedirs(workdir)
         try:
             output = run_command(
-                'import', ['--input', self.repos_file_url, '.'], subfolder='import-url'
+                'import', ['--input', repos_file, '.'], subfolder=import_file
             )
             # the actual output contains absolute paths
             output = output.replace(
                 b'repository in ' + workdir.encode() + b'/', b'repository in ./'
             )
-            expected = get_expected_output('import')
+            expected = get_expected_output(import_file)
             # newer git versions don't append ... after the commit hash
             assert output == expected or output == expected.replace(b'... ', b' ')
         finally:
@@ -319,6 +340,20 @@ class TestCommands(StagedReposFile):
             self.assertFalse(os.path.exists(os.path.join(workdir, 'without_version')))
         finally:
             rmtree(workdir)
+
+    def test_import_file_url(self):
+        """Test import from file URL."""
+        self.import_common('import', REPOS_FILE_URL)
+
+    def test_import_extends(self):
+        """Test import with extends functionality."""
+        self.import_common('import_extends', REPOS_EXTENDS_FILE)
+
+    def test_import_extends_loop(self):
+        """Test import with extends functionality that creates a circular import."""
+        with self.assertRaises(subprocess.CalledProcessError) as e:
+            run_command('import', ['--input', REPOS_EXTENDS_LOOP_FILE, '.'])
+        self.assertIn(b'Circular import detected:', e.exception.output)
 
     def test_validate(self):
         output = run_command('validate', ['--input', self.repos_file_path])

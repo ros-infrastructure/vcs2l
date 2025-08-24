@@ -87,23 +87,84 @@ def file_or_url_type(value):
     return request.Request(value, headers={'User-Agent': 'vcs2l/' + vcs2l_version})
 
 
-def get_repositories(yaml_file):
+def load_yaml_file(yaml_file):
+    """Load and parse a YAML file."""
     try:
-        root = yaml.safe_load(yaml_file)
+        return yaml.safe_load(yaml_file)
     except yaml.YAMLError as e:
-        raise RuntimeError('Input data is not valid yaml format: %s' % e)
+        raise RuntimeError('Input data is not valid yaml format: %s' % e) from e
 
+
+def get_repositories_from_root(root):
+    """Extract repositories from the parsed YAML root object."""
     try:
         repositories = root['repositories']
         return get_repos_in_vcs2l_format(repositories)
     except KeyError as e:
-        raise RuntimeError('Input data is not valid format: %s' % e)
+        raise RuntimeError('Input data is not valid format: %s' % e) from e
     except TypeError as e:
         # try rosinstall file format
         try:
             return get_repos_in_rosinstall_format(root)
         except Exception:
-            raise RuntimeError('Input data is not valid format: %s' % e)
+            raise RuntimeError('Input data is not valid format: %s' % e) from e
+
+
+def get_repositories(yaml_file, visited_files=None):
+    """Recursively get repositories from a YAML file, handling inheritance."""
+    if visited_files is None:
+        visited_files = set()
+
+    # Get absolute path to handle relative paths consistently
+    current_file_path = os.path.abspath(yaml_file.name)
+
+    if current_file_path in visited_files:
+        raise RuntimeError(f'Circular import detected: {current_file_path}')
+
+    visited_files.add(current_file_path)
+
+    try:
+        root = load_yaml_file(yaml_file)
+
+        combined_repos = {}
+
+        if 'extends' in root:
+            parent_file = root['extends']
+
+            # If absolute path is not valid, try relative to current file
+            if not os.path.isabs(parent_file):
+                current_dir = os.path.dirname(current_file_path)
+                parent_file = os.path.join(current_dir, parent_file)
+
+            if not os.path.exists(parent_file):
+                raise RuntimeError(f'Parent file not found: {parent_file}')
+
+            try:
+                # Recursively get repositories from parent file
+                with open(parent_file, 'r', encoding='utf-8') as parent_f:
+                    parent_repos = get_repositories(parent_f, visited_files.copy())
+                    combined_repos.update(parent_repos)
+            except Exception as e:
+                if str(e).startswith('Circular import detected:'):
+                    raise
+                raise RuntimeError(
+                    f'Error reading parent file {parent_file}: \n{str(e)}'
+                ) from e
+
+        current_repos = get_repositories_from_root(root)
+        combined_repos.update(current_repos)
+
+        return combined_repos
+
+    except FileNotFoundError as e:
+        raise RuntimeError(f'File not found: {yaml_file}') from e
+    except yaml.YAMLError as e:
+        raise RuntimeError(
+            f'Error parsing YAML file {yaml_file}: {str(e)}'
+        ) from e
+    finally:
+        # Remove current file from visited set when leaving this call
+        visited_files.discard(current_file_path)
 
 
 def get_repos_in_vcs2l_format(repositories):
