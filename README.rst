@@ -107,6 +107,29 @@ For those two types the ``version`` key is optional.
 If specified only entries from the archive which are in the subfolder specified by the version value are being extracted.
 
 
+Delete set of repositories
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``vcs delete`` command removes all directories of repositories which are passed in via ``stdin`` in YAML format.
+By default, the command performs a dry-run and only lists the directories which would be deleted.
+In addition, it would convey warnings for missing directories and skip invalid paths upon which no action is taken.
+To actually delete the directories the ``-f/--force`` argument must be passed::
+
+.. code-block:: bash
+
+  $ vcs delete < test/list.repos
+
+  Warning: The following paths do not exist:
+    ./immutable/hash
+    ./immutable/hash_tar
+    ./immutable/hash_zip
+    ./immutable/tag
+    ./without_version
+  The following paths will be deleted:
+    ./vcs2l
+  Dry-run mode: No directories were deleted. Use -f/--force to actually delete them.
+
+
 Validate repositories file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

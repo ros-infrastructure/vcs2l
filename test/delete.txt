@@ -1,0 +1,7 @@
+The following directories will be deleted:
+  ./immutable/hash
+  ./immutable/hash_tar
+  ./immutable/hash_zip
+  ./immutable/tag
+  ./vcs2l
+  ./without_version

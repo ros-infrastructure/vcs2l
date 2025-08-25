@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+
+import sys
+
+from vcs2l.commands.delete import main
+
+sys.exit(main() or 0)

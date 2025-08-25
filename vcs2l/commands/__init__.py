@@ -1,5 +1,6 @@
 from .branch import BranchCommand
 from .custom import CustomCommand
+from .delete import DeleteCommand
 from .diff import DiffCommand
 from .export import ExportCommand
 from .import_ import ImportCommand
@@ -13,6 +14,7 @@ from .validate import ValidateCommand
 vcs2l_commands = []
 vcs2l_commands.append(BranchCommand)
 vcs2l_commands.append(CustomCommand)
+vcs2l_commands.append(DeleteCommand)
 vcs2l_commands.append(DiffCommand)
 vcs2l_commands.append(ExportCommand)
 vcs2l_commands.append(ImportCommand)
