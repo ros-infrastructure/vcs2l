@@ -1,5 +1,6 @@
 import os
 import subprocess
+import tempfile
 from shutil import which
 
 from vcs2l.clients.vcs_base import VcsClientBase
@@ -782,6 +783,47 @@ class GitClient(VcsClientBase):
         if GitClient._config_color_is_auto:
             cmd[1:1] = '-c', 'color.ui=always'
 
+    def export_repository(self, version, basepath):
+        """Export repository to a tar.gz file at the specified version."""
+        if not GitClient.is_repository(self.path):
+            return False
+
+        self._check_executable()
+        filepath = '{0}.tar.gz'.format(basepath)
+
+        # If current version matches export version and no local changes, export directly
+        current_sha = self._get_current_version()
+        export_sha = self._get_version_sha(version) if version else current_sha
+        if current_sha == export_sha and self._has_no_local_changes():
+            cmd = [
+                GitClient._executable,
+                'archive',
+                '--format=tar.gz',
+                '--output={}'.format(filepath),
+                version or 'HEAD',
+            ]
+            result = self._run_command(cmd)
+            if result['returncode'] == 0:
+                return filepath
+
+        # Otherwise use temp directory approach
+        tmpd_path = tempfile.mkdtemp()
+        try:
+            tmpgit = GitClient(tmpd_path)
+            if tmpgit.checkout(self.path, version=version, shallow=False):
+                cmd = [
+                    GitClient._executable,
+                    'archive',
+                    '--format=tar.gz',
+                    '--output={}'.format(filepath),
+                    version or 'HEAD',
+                ]
+                result = tmpgit._run_command(cmd)
+                return filepath if result['returncode'] == 0 else False
+            return False
+        finally:
+            rmtree(tmpd_path)
+
     def checkout(self, url, version=None, verbose=False, shallow=False, timeout=None):
         """Clone a git repository to the specified path and checkout a specific version."""
         if url is None or url.strip() == '':
@@ -866,6 +908,24 @@ class GitClient(VcsClientBase):
                 continue
             tuples.append((hash_, ref))
         return tuples
+
+    def _get_current_version(self):
+        """Get current HEAD SHA."""
+        cmd = [GitClient._executable, 'rev-parse', 'HEAD']
+        result = self._run_command(cmd)
+        return result['output'].strip() if result['returncode'] == 0 else None
+
+    def _get_version_sha(self, version):
+        """Get SHA for a given version."""
+        cmd = [GitClient._executable, 'rev-parse', version]
+        result = self._run_command(cmd)
+        return result['output'].strip() if result['returncode'] == 0 else None
+
+    def _has_no_local_changes(self):
+        """Check if there are no local changes."""
+        cmd = [GitClient._executable, 'diff', '--quiet']
+        result = self._run_command(cmd)
+        return result['returncode'] == 0
 
 
 if not GitClient._executable:
