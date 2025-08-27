@@ -1,8 +1,11 @@
 import os
+import tarfile
+import tempfile
 from shutil import which
-from xml.etree.ElementTree import fromstring
+from xml.etree.ElementTree import ParseError, fromstring
 
 from vcs2l.clients.vcs_base import VcsClientBase
+from vcs2l.util import rmtree
 
 
 class SvnClient(VcsClientBase):
@@ -257,6 +260,68 @@ class SvnClient(VcsClientBase):
             output = "Found svn repository '%s' with default branch" % command.url
 
         return {'cmd': cmd, 'cwd': self.path, 'output': output, 'returncode': None}
+
+    def _export_repository(self, version, basepath):
+        """Export the svn repository at a given version to a tar.gz file."""
+        self._check_executable()
+
+        # Create temporary directory for export
+        temp_dir = tempfile.mkdtemp()
+
+        try:
+            # Get current repository URL
+            cmd_info = [SvnClient._executable, 'info', '--xml']
+            result_info = self._run_command(cmd_info)
+            if result_info['returncode']:
+                print('Could not determine url: ' + result_info['output'])
+                return False
+
+            try:
+                root = fromstring(result_info['output'])
+                entry = root.find('entry')
+
+                if entry is None:
+                    print('No entry found in SVN info XML output')
+                    return False
+
+                url = entry.findtext('url')
+                if url is None:
+                    print('No URL found in SVN info XML output')
+                    return False
+
+            except ParseError:
+                print('Could not parse SVN info XML output')
+                return False
+
+            # Build export URL with version
+            export_url = url
+            if version:
+                export_url += '@' + str(version)
+
+            cmd_export = [
+                SvnClient._executable,
+                'export',
+                '--force',
+                export_url,
+                temp_dir,
+            ]
+            result_export = self._run_command(cmd_export)
+
+            if result_export['returncode']:
+                print('Could not export repository: ' + result_export['output'])
+                return False
+
+            # Create tar.gz archive
+            with tarfile.open(basepath + '.tar.gz', 'w:gz') as tar:
+                tar.add(temp_dir, arcname='')
+            return True
+
+        except tarfile.TarError as e:
+            print('Could not create tar.gz archive: %s' % e)
+            return False
+
+        finally:
+            rmtree(temp_dir)
 
     def checkout(self, url, version=None, verbose=False, shallow=False, timeout=None):
         """Checkout the repository from the given URL."""
