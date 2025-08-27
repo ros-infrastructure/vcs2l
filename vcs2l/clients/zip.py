@@ -4,6 +4,7 @@ from io import BytesIO
 from urllib.error import URLError
 
 from vcs2l.clients.vcs_base import VcsClientBase, load_url, test_url
+from vcs2l.errors import Vcs2lError
 from vcs2l.util import rmtree
 
 
@@ -128,3 +129,5 @@ class ZipClient(VcsClientBase):
             'output': "Zip url '%s' exists" % command.url,
             'returncode': None,
         }
+    def checkout(self, url, version=None, verbose=False, shallow=False, timeout=None):
+        raise Vcs2lError('checkout not implemented for extracted zips.')
