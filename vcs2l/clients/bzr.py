@@ -194,6 +194,21 @@ class BzrClient(VcsClientBase):
         result['output'] = branch
         return result
 
+    def _export_repository(self, version, basepath):
+        """Export the bzr repository at a given version to a tar.gz file."""
+        self._check_executable()
+
+        # Construct the bzr export command
+        cmd = [BzrClient._executable, 'export', '--format=tgz', basepath + '.tar.gz']
+
+        if version:
+            cmd.append('--revision')
+            cmd.append(version)
+
+        result = self._run_command(cmd)
+
+        return result['returncode'] == 0
+
     def checkout(self, url, version=None, verbose=False, shallow=False, timeout=None):
         """Creates a local Bazaar branch from a remote repository."""
         if url is None or url.strip() == '':
