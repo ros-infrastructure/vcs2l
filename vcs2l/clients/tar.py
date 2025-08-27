@@ -114,5 +114,6 @@ class TarClient(VcsClientBase):
             'output': "Tarball url '%s' exists" % command.url,
             'returncode': None,
         }
+
     def checkout(self, url, version=None, verbose=False, shallow=False, timeout=None):
         raise Vcs2lError('checkout not implemented for extracted tars.')
