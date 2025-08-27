@@ -115,5 +115,8 @@ class TarClient(VcsClientBase):
             'returncode': None,
         }
 
+    def export_repository(self, version, basepath):
+        raise Vcs2lError('export repository not implemented for extracted tars')
+
     def checkout(self, url, version=None, verbose=False, shallow=False, timeout=None):
         raise Vcs2lError('checkout not implemented for extracted tars.')

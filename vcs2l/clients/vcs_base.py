@@ -69,6 +69,20 @@ class VcsClientBase(object):
                 }
         return None
 
+    def export_repository(self, version, basepath):
+        """Export the repository at the given version to the given basepath.
+
+        Args:
+            version: the version to export
+            basepath: the path to export to
+        Returns:
+            A dict with keys 'cmd', 'cwd', 'output', and 'returncode'.
+        """
+        raise NotImplementedError(
+            'Base class export_repository method must be overridden for client type %s '
+            % self.__class__.type
+        )
+
     def checkout(self, url, version=None, verbose=False, shallow=False, timeout=None):
         """Checkout the repository from the given URL.
 
