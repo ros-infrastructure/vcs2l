@@ -21,6 +21,11 @@ jobs:
           - windows-2022
           - windows-2025
         python-version: ["3.10", "3.12"]
+        include:
+          - os: ubuntu-22.04
+            python-version: "3.7"
+          - os: ubuntu-22.04
+            python-version: "3.8"
 
     steps:
       - name: Checkout repository
