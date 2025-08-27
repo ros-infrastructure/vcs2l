@@ -19,7 +19,6 @@ TEST_WORKSPACE = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'test_workspace'
 )
 
-CI = os.environ.get('CI') == 'true'  # Travis CI / Github actions set: CI=true
 svn = which('svn')
 hg = which('hg')
 if svn:
@@ -342,7 +341,6 @@ invocation.
         expected = get_expected_output('validate_bad')
         self.assertEqual(output, expected)
 
-    @unittest.skipIf(CI, 'Cannot run on CI')
     @unittest.skipIf(not svn, '`svn` was not found')
     @unittest.skipIf(not hg, '`hg` was not found')
     def test_validate_svn_and_hg(self):

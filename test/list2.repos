@@ -13,5 +13,5 @@ repositories:
     version: 5.8
   svn/rev:
     type: svn
-    url: https://github.com/ros-infrastructure/vcs2l
-    version: 3
+    url: https://svn.apache.org/repos/asf/subversion
+    version: 1928014
