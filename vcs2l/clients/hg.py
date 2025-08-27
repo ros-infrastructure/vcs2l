@@ -339,6 +339,58 @@ class HgClient(VcsClientBase):
         if HgClient._config_color:
             cmd[1:1] = '--color', 'always'
 
+    def checkout(self, url, version='', verbose=False, shallow=False, timeout=None):
+        """Checkout the repository from the given URL."""
+        if url is None or url.strip() == '':
+            raise ValueError('Invalid empty url: "%s"' % url)
+
+        self._check_executable()
+
+        # Check if path exists and handle accordingly
+        if os.path.exists(self.path):
+            if os.path.isdir(self.path):
+                if os.listdir(self.path):
+                    return False
+            else:
+                return False
+
+        # Ensure parent directory exists
+        parent_dir = os.path.dirname(self.path)
+        if parent_dir:
+            try:
+                os.makedirs(parent_dir, exist_ok=True)
+            except OSError:
+                return False
+
+        try:
+            # Clone repository
+            cmd_clone = [HgClient._executable, 'clone', url, self.path]
+            result_clone = self._run_command(cmd_clone)
+
+            if result_clone['returncode'] != 0:
+                print(
+                    "Could not clone repository '%s': %s"
+                    % (url, result_clone['output'])
+                )
+                return False
+
+            # Checkout specific version if provided
+            if version and version.strip():
+                cmd_checkout = [HgClient._executable, 'update', version.strip()]
+                result_checkout = self._run_command(cmd_checkout)
+
+                if result_checkout['returncode'] != 0:
+                    print(
+                        "Could not checkout '%s': %s"
+                        % (version, result_checkout['output'])
+                    )
+                    return False
+
+            return True
+
+        except Exception:
+            return False
+
     def _check_executable(self):
         assert HgClient._executable is not None, "Could not find 'hg' executable"
 
