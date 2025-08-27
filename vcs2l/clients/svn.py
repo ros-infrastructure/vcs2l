@@ -258,6 +258,41 @@ class SvnClient(VcsClientBase):
 
         return {'cmd': cmd, 'cwd': self.path, 'output': output, 'returncode': None}
 
+    def checkout(self, url, version=None, verbose=False, shallow=False, timeout=None):
+        """Checkout the repository from the given URL."""
+
+        if url is None or url.strip() == '':
+            raise ValueError('Invalid empty url: "%s"' % url)
+
+        # Check if directory exists and is not empty
+        if os.path.exists(self.path) and os.listdir(self.path):
+            raise RuntimeError('Target path exists and is not empty: %s' % self.path)
+
+        # Create the directory if it doesn't exist
+        not_exist = self._create_path()
+        if not_exist:
+            print(not_exist['output'])
+            return False
+
+        self._check_executable()
+
+        cmd = [SvnClient._executable, '--non-interactive', 'checkout']
+
+        if version:
+            cmd.extend(['-r', str(version)])
+
+        # Add URL and target directory
+        cmd.extend([url, '.'])
+
+        result = self._run_command(cmd)
+
+        if result['returncode']:
+            if result['output']:
+                print('Checkout failed: %s' % result['output'])
+            return False
+
+        return True
+
     def _check_executable(self):
         assert SvnClient._executable is not None, "Could not find 'svn' executable"
 
