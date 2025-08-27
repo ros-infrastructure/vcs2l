@@ -69,6 +69,23 @@ class VcsClientBase(object):
                 }
         return None
 
+    def checkout(self, url, version=None, verbose=False, shallow=False, timeout=None):
+        """Checkout the repository from the given URL.
+
+        Args:
+            url: the URL to checkout from
+            version: the version to checkout (branch, tag, or revision)
+            verbose: whether to run the command in verbose mode
+            shallow: whether to perform a shallow checkout (if supported)
+            timeout: timeout for network operations (if supported)
+        Returns:
+            True on success, False otherwise.
+        """
+        raise NotImplementedError(
+            'Base class checkout method must be overridden for client type %s '
+            % self._vcs_type_name
+        )
+
 
 def run_command(cmd, cwd, env=None):
     if not os.path.exists(cwd):
