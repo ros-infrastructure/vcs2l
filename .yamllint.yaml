@@ -1,0 +1,7 @@
+---
+extends: default
+
+rules:
+  truthy: disable  # Prevent false positives on 'on:' in GitHub workflows
+  comments: disable  # Allow GitHub comment hashes to be separated by a single space for Dependabot compatibility.
+  line-length: disable  # Allow long lines in GitHub workflows due to GitHub hashes.
