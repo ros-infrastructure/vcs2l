@@ -1,42 +1,42 @@
 vcs2l_clients = []
 
 try:
-    from .bzr import BzrClient
+    from vcs2l.clients.bzr import BzrClient
 
     vcs2l_clients.append(BzrClient)
 except ImportError:
     pass
 
 try:
-    from .git import GitClient
+    from vcs2l.clients.git import GitClient
 
     vcs2l_clients.append(GitClient)
 except ImportError:
     pass
 
 try:
-    from .hg import HgClient
+    from vcs2l.clients.hg import HgClient
 
     vcs2l_clients.append(HgClient)
 except ImportError:
     pass
 
 try:
-    from .svn import SvnClient
+    from vcs2l.clients.svn import SvnClient
 
     vcs2l_clients.append(SvnClient)
 except ImportError:
     pass
 
 try:
-    from .tar import TarClient
+    from vcs2l.clients.tar import TarClient
 
     vcs2l_clients.append(TarClient)
 except ImportError:
     pass
 
 try:
-    from .zip import ZipClient
+    from vcs2l.clients.zip import ZipClient
 
     vcs2l_clients.append(ZipClient)
 except ImportError:
