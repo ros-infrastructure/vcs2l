@@ -1,3 +1,4 @@
+import gzip
 import os
 from shutil import which
 from threading import Lock
@@ -338,6 +339,36 @@ class HgClient(VcsClientBase):
         # inject arguments to force colorization
         if HgClient._config_color:
             cmd[1:1] = '--color', 'always'
+
+    def _export_repository(self, version, basepath):
+        """Export the hg repository at a given version to a tar.gz file."""
+        self._check_executable()
+
+        cmd = [
+            HgClient._executable,
+            'archive',
+            '-t',
+            'tar',
+            '-r',
+            version,
+            basepath + '.tar',
+        ]
+        result = self._run_command(cmd)
+        if result['returncode']:
+            print('Failed to export hg repository: %s' % result['output'])
+            return False
+
+        try:
+            with open(basepath + '.tar', 'rb') as tar_file:
+                with gzip.open(basepath + '.tar.gz', 'wb') as gzip_file:
+                    gzip_file.writelines(tar_file)
+        finally:
+            try:
+                os.remove(basepath + '.tar')
+            except OSError:
+                print('Could not remove intermediate tar file %s.tar' % basepath)
+
+        return True
 
     def checkout(self, url, version='', verbose=False, shallow=False, timeout=None):
         """Checkout the repository from the given URL."""
