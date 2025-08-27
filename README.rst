@@ -88,7 +88,8 @@ Furthermore if the local branch has evolved from the remote repository an import
 To make sure to store the exact revision in the exported data use the command line argument ``--exact``.
 Since a specific revision is not tied to neither a branch nor a remote (for Git and Mercurial) the tool will check if the current hash exists in any of the remotes.
 If it exists in multiple the remotes ``origin`` and ``upstream`` are considered before any other in alphabetical order.
-
+For compatibility with `yamllint <https://yamllint.readthedocs.io/en/stable/>`_ the output can be formatted by passing the command line argument ``--lint``.
+This would add the document start and end markers (``---`` and ``...``) to the output.
 
 Import set of repositories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
