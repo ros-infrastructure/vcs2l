@@ -2,6 +2,18 @@
 Changelog for package vcs2l
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.4 (2025-08-28)
+------------------
+* Migrated README from reStructuredText to Markdown. (`#51 <https://github.com/ros-infrastructure/vcs2l/pull/51>`_)
+* Added option to delete repositories listed in a YAML file. (`#40 <https://github.com/ros-infrastructure/vcs2l/pull/40>`_)
+* Added manual release workflow with .whl and .tar.gz artifacts. (`#36 <https://github.com/ros-infrastructure/vcs2l/pull/36>`_)
+* Updated issue templates to have top-level keys. (`#50 <https://github.com/ros-infrastructure/vcs2l/pull/50>`_)
+* Added CODE_OF_CONDUCT.md and SECURITY.md files to improve repository visibility and governance. (`#24 <https://github.com/ros-infrastructure/vcs2l/pull/24>`_)
+* Enable test run on mercurial and subversion (`#42 <https://github.com/ros-infrastructure/vcs2l/pull/42>`_)
+* Add python 3.7 and 3.8 to CI workflow. (`#37 <https://github.com/ros-infrastructure/vcs2l/pull/37>`_)
+* Added yamlint and --lint option to vcs import (`#33 <https://github.com/ros-infrastructure/vcs2l/pull/33>`_)
+* Contributors: Leander Stephen D'Souza
+
 1.1.3 (2025-08-20)
 ------------------
 * Fix: UnboundLocalError: local variable 'version_type' referenced before assignment (`#15 <https://github.com/ros-infrastructure/vcs2l/pull/15>`_)
