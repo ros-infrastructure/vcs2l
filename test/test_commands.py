@@ -328,6 +328,36 @@ invocation.
         finally:
             rmtree(workdir)
 
+    def test_deletion(self):
+        """Test the delete command."""
+        workdir = os.path.join(TEST_WORKSPACE, 'deletion')
+        os.makedirs(workdir)
+        try:
+            run_command(
+                'import', ['--input', REPOS_FILE_URL, '.'], subfolder='deletion'
+            )
+            output = run_command(
+                'delete',
+                ['--force', '--input', REPOS_FILE_URL, '.'],
+                subfolder='deletion',
+            )
+            expected = get_expected_output('delete')
+            self.assertEqual(output, expected)
+
+            # check that repositories were actually deleted
+            self.assertFalse(os.path.exists(os.path.join(workdir, 'immutable/hash')))
+            self.assertFalse(
+                os.path.exists(os.path.join(workdir, 'immutable/hash_tar'))
+            )
+            self.assertFalse(
+                os.path.exists(os.path.join(workdir, 'immutable/hash_zip'))
+            )
+            self.assertFalse(os.path.exists(os.path.join(workdir, 'immutable/tag')))
+            self.assertFalse(os.path.exists(os.path.join(workdir, 'vcs2l')))
+            self.assertFalse(os.path.exists(os.path.join(workdir, 'without_version')))
+        finally:
+            rmtree(workdir)
+
     def test_validate(self):
         output = run_command('validate', ['--input', REPOS_FILE])
         expected = get_expected_output('validate')

@@ -1,1 +1,1 @@
-branch custom diff export import log pull push remotes status validate
+branch custom delete diff export import log pull push remotes status validate

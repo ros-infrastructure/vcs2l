@@ -66,6 +66,7 @@ setup(
             'vcs-branch = vcs2l.commands.branch:main',
             'vcs-bzr = vcs2l.commands.custom:bzr_main',
             'vcs-custom = vcs2l.commands.custom:main',
+            'vcs-delete = vcs2l.commands.delete:main',
             'vcs-diff = vcs2l.commands.diff:main',
             'vcs-export = vcs2l.commands.export:main',
             'vcs-git = vcs2l.commands.custom:git_main',
