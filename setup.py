@@ -7,7 +7,7 @@ from setuptools import find_packages, setup
 from vcs2l import __version__
 
 with open(
-    os.path.join(os.path.dirname(__file__), 'README.rst'), 'r', encoding='utf-8'
+    os.path.join(os.path.dirname(__file__), 'README.md'), 'r', encoding='utf-8'
 ) as f:
     long_description = f.read()
 
@@ -47,7 +47,7 @@ setup(
     description='vcs2l provides a command line tool to invoke vcs commands '
     'on multiple repositories.',
     long_description=long_description,
-    long_description_content_type='text/x-rst',
+    long_description_content_type='text/markdown',
     license='Apache License, Version 2.0',
     data_files=[
         (
