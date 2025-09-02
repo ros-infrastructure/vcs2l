@@ -24,7 +24,11 @@ setup(
             'pycodestyle',
             'pyflakes',
             'pytest',
-        ]
+        ],
+        'docs': [
+            'sphinx',
+            'sphinx-rtd-theme',
+        ],
     },
     packages=find_packages(),
     author='Dirk Thomas',
