@@ -23,7 +23,11 @@ setup(
     extras_require={
         'test': [
             'pytest',
-        ]
+        ],
+        'docs': [
+            'sphinx',
+            'sphinx-rtd-theme',
+        ],
     },
     packages=find_packages(),
     author='Dirk Thomas',
