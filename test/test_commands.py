@@ -293,11 +293,21 @@ invocation.
                 ['--shallow', '--input', REPOS_FILE, '.'],
                 subfolder='import-shallow',
             )
+            # Normalize line endings for Windows and macOS compatibility
+            output = output.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+
             # the actual output contains absolute paths
             output = output.replace(
                 b'repository in ' + workdir.encode() + b'/', b'repository in ./'
             )
+            # delete lines in output that start with 'hint:'
+            lines = output.splitlines()
+            filtered_lines = [line for line in lines if not line.startswith(b'hint:')]
+            output = b'\n'.join(filtered_lines).strip() + b'\n'
+
             expected = get_expected_output('import_shallow')
+            expected = expected.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+
             # newer git versions don't append ... after the commit hash
             assert output == expected or output == expected.replace(b'... ', b' ')
 
