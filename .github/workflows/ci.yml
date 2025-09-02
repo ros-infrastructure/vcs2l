@@ -51,3 +51,12 @@ jobs:
         run: |
           pip install --upgrade .[test]
           ${{ startsWith(matrix.os, 'windows') && 'set PYTHONPATH=%cd% &&' || 'PYTHONPATH=`pwd`' }} python3 -m pytest -s -v test
+
+  codecov:
+    needs: build
+    uses: ros-infrastructure/ci/.github/workflows/pytest.yaml@main
+    with:
+      codecov: true
+      matrix-filter: del(.matrix.os[] | select(. != "ubuntu-latest")) | del(.matrix.python[] | select(. != "3.12"))
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
