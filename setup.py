@@ -39,7 +39,6 @@ setup(
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
         'Topic :: Software Development :: Version Control',
         'Topic :: Utilities',
@@ -48,7 +47,7 @@ setup(
     'on multiple repositories.',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    license='Apache License, Version 2.0',
+    license='Apache-2.0',
     data_files=[
         (
             'share/vcs2l-completion',
