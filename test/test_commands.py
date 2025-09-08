@@ -401,6 +401,7 @@ def run_command(command, args=None, subfolder=None):
     env.update(
         LANG='en_US.UTF-8',
         PYTHONPATH=repo_root + os.pathsep + env.get('PYTHONPATH', ''),
+        PYTHONWARNINGS='ignore',
     )
     cwd = TEST_WORKSPACE
     if subfolder:
