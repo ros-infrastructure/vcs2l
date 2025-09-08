@@ -1,0 +1,5 @@
+[core]
+       abbrev = 7
+
+[init]
+       defaultBranch = main

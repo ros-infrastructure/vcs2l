@@ -399,6 +399,7 @@ def run_command(command, args=None, subfolder=None):
     script = os.path.join(repo_root, 'scripts', 'vcs-' + command)
     env = dict(os.environ)
     env.update(
+        GIT_CONFIG_GLOBAL=os.path.join(repo_root, 'test', 'gitconfig'),
         LANG='en_US.UTF-8',
         PYTHONPATH=repo_root + os.pathsep + env.get('PYTHONPATH', ''),
     )
