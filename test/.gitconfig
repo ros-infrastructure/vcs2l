@@ -1,8 +1,8 @@
 [advice]
-	detachedHead = true
+detachedHead = true
 
 [core]
-       abbrev = 7
+abbrev = 7
 
 [init]
-       defaultBranch = main
+defaultBranch = main
