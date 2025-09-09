@@ -18,6 +18,7 @@ The biggest differences between the two are:
 
 The latest version supports Python 3.6 and newer.
 However, the CI is only run on Python 3.7 and newer, as there are no suitable GitHub Actions [runners](https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json/) available for Python 3.6.
+Additionally, Debian packages can only be built for platforms with Python 3.8 and newer.
 
 ## How does it work?
 

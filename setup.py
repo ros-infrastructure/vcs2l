@@ -15,7 +15,11 @@ setup(
     name='vcs2l',
     version=__version__,
     requires_python='>=3.6',
-    install_requires=['PyYAML', 'setuptools'],
+    install_requires=[
+        "importlib_metadata; python_version<'3.8' and python_version>='3.7'",
+        'PyYAML',
+        "setuptools; python_version<'3.7'",
+    ],
     extras_require={
         'test': [
             'pytest',
