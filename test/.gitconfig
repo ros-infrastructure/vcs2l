@@ -1,3 +1,6 @@
+[advice]
+	detachedHead = true
+
 [core]
        abbrev = 7
 
