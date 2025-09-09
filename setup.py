@@ -14,7 +14,7 @@ with open(
 setup(
     name='vcs2l',
     version=__version__,
-    requires_python='>=3.5',
+    requires_python='>=3.6',
     install_requires=['PyYAML', 'setuptools'],
     extras_require={
         'test': [
