@@ -56,6 +56,4 @@ jobs:
         run: |
           pip install --upgrade .[test]
           pip install --upgrade coverage
-          git config --global --add init.defaultBranch main
-          git config --global --add advice.detachedHead true
           ${{ startsWith(matrix.os, 'windows') && 'set PYTHONPATH=%cd% &&' || 'PYTHONPATH=`pwd`' }} pytest -s -v test
