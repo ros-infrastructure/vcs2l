@@ -18,11 +18,6 @@ setup(
     install_requires=['PyYAML', 'setuptools'],
     extras_require={
         'test': [
-            'flake8',
-            'flake8-docstrings',
-            'flake8-import-order',
-            'pycodestyle',
-            'pyflakes',
             'pytest',
         ]
     },
