@@ -4,34 +4,38 @@ Installation
 vcs2l can be installed through multiple package managers.
 Choose the method that best fits your environment.
 
-pip
+Pip
 ---
-The recommended way to install vcs2l is through `pip <https://pypi.org/project/vcs2l/>`_.
+Vcs2l is available through `pip <https://pypi.org/project/vcs2l/>`_.
 You can install it using the following command:
 
 .. code-block:: bash
 
     pip3 install vcs2l
 
-conda
------
-If you prefer using conda, you can install vcs2l from the `conda-forge <https://anaconda.org/conda-forge/vcs2l>`_ channel:
+Ubuntu/Debian
+-------------
+Install the Debian package by adding the ``ros2-apt-source`` repository to your system.
+Follow the official guide for your selected ROS Distro namely
+`rolling <https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debs.html#enable-required-repositories>`_,
+`kilted <https://docs.ros.org/en/kilted/Installation/Ubuntu-Install-Debs.html#enable-required-repositories>`_, or
+`jazzy <https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html#enable-required-repositories>`_ for this addition.
 
-.. code-block:: bash
-
-   conda install -c conda-forge vcs2l
-
-debian
-------
-Install the debian package by adding the ``ros2-apt-source`` repository to your system by following the
-`ROS 2 <https://docs.ros.org/en/kilted/Installation/Ubuntu-Install-Debs.html>`_
-installation instructions for your distribution.
+This is a **required** step for installing vcs2l on Debian-based systems.
 
 Then, install vcs2l:
 
 .. code-block:: bash
 
    sudo apt-get install python3-vcs2l
+
+Conda
+-----
+If you prefer using conda, you can install vcs2l from the `conda-forge <https://anaconda.org/conda-forge/vcs2l>`_ channel:
+
+.. code-block:: bash
+
+   conda install -c conda-forge vcs2l
 
 Verifying the Installation
 ---------------------------
