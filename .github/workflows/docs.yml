@@ -28,6 +28,14 @@ jobs:
           cd docs
           make html
 
+      - name: Upload documentation for review
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: vcs2l-docs-pr-${{ github.event.number }}
+          path: docs/build/html
+          retention-days: 7
+
       - name: Upload artifact
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
