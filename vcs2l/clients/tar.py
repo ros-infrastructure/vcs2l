@@ -75,7 +75,11 @@ class TarClient(VcsClientBase):
 
             prefix = str(command.version) + '/'
             members = get_members(tar, prefix)
-        tar.extractall(self.path, members)
+
+        if hasattr(tarfile, 'data_filter'):
+            tar.extractall(self.path, members, filter='data')
+        else:
+            tar.extractall(self.path, members)
 
         return {
             'cmd': '',
