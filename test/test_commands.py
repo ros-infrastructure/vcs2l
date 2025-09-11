@@ -342,6 +342,9 @@ invocation.
                 subfolder='deletion',
             )
             expected = get_expected_output('delete')
+            # we don't care what order these messages appear in
+            output = b'\n'.join(sorted(output.split(b'\n')))
+            expected = b'\n'.join(sorted(output.split(b'\n')))
             self.assertEqual(output, expected)
 
             # check that repositories were actually deleted
@@ -365,6 +368,9 @@ invocation.
 
         output = run_command('validate', ['--hide-empty', '--input', REPOS_FILE])
         expected = get_expected_output('validate_hide')
+        # we don't care what order these messages appear in
+        output = b'\n'.join(sorted(output.split(b'\n')))
+        expected = b'\n'.join(sorted(output.split(b'\n')))
         self.assertEqual(output, expected)
 
         output = run_command('validate', ['--input', BAD_REPOS_FILE])
