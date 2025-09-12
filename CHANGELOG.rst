@@ -1,6 +1,23 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package vcs2l
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1.1.5 (2025-09-12)
+------------------
+* Ignore nondeterministic line ordering in test_commands (`#66 <https://github.com/ros-infrastructure/vcs2l/pull/66>`_)
+* Reduce unnecessary console output validation in test_commands (`#67 <https://github.com/ros-infrastructure/vcs2l/pull/67>`_)
+* Added sphinx auto documentation (`#52 <https://github.com/ros-infrastructure/vcs2l/pull/52>`_)
+* Fix CVE-2007-4559 warnings in RHEL tar extraction. (`#62 <https://github.com/ros-infrastructure/vcs2l/pull/62>`_)
+* Disable Python warnings when capturing console output (`#61 <https://github.com/ros-infrastructure/vcs2l/pull/61>`_)
+* Fix dependency for entry_points import (`#65 <https://github.com/ros-infrastructure/vcs2l/pull/65>`_)
+* Bump minimum Python version to 3.6 (`#64 <https://github.com/ros-infrastructure/vcs2l/pull/64>`_)
+* Explicitly set a static global git configuration while testing (`#58 <https://github.com/ros-infrastructure/vcs2l/pull/58>`_)
+* Drop test dependencies on unused linters (`#63 <https://github.com/ros-infrastructure/vcs2l/pull/63>`_)
+* Drop license classifier in favor of SPDX expression (`#60 <https://github.com/ros-infrastructure/vcs2l/pull/60>`_)
+* Added DCO instructions to contributing guidelines. (`#44 <https://github.com/ros-infrastructure/vcs2l/pull/44>`_)
+* 🛠️ Bump pypa/gh-action-pypi-publish from 1.12.4 to 1.13.0 (`#57 <https://github.com/ros-infrastructure/vcs2l/pull/57>`_)
+* 🛠️ Bump actions/setup-python from 5.6.0 to 6.0.0 (`#56 <https://github.com/ros-infrastructure/vcs2l/pull/56>`_)
+
+Contributors: Leander Stephen D'Souza, Scott K Logan
 
 1.1.4 (2025-08-28)
 ------------------
