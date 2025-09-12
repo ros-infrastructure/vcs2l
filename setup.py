@@ -25,7 +25,7 @@ setup(
             'pytest',
         ],
         'docs': [
-            'sphinx',
+            'sphinx>=8.2',
             'sphinx-rtd-theme',
         ],
     },
