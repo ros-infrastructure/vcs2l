@@ -6,3 +6,6 @@ abbrev = 7
 
 [init]
 defaultBranch = main
+
+[pull]
+rebase = false
