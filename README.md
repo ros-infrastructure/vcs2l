@@ -6,6 +6,8 @@ This fork is created to continue the development of `vcstool`, as it is no longe
 
 The commands provided by vcs2l have the same naming structure as the original fork, so it can be used as a drop-in replacement. Therefore, the repository is renamed to `vcs2l` while maintaining the command names to `vcstool` to ensure compatibility with existing scripts and workflows.
 
+For more information on how to use vcs2l, please refer to the [**documentation**](https://ros-infrastructure.github.io/vcs2l/index.html).
+
 ### Note:
 This tool should not be confused with [vcstools](https://github.com/vcstools/vcstools/) (with a trailing `s`) which provides a Python API for interacting with different version control systems.
 
@@ -215,3 +217,13 @@ Alternatively the `-e/--editable` flag of `pip` can be used:
 # from the top level of this repo
 pip3 install --user -e .
 ```
+
+## How to build the documentation?
+
+The documentation is built using [Sphinx](http://sphinx-doc.org/) and can be built locally after installing the package by running:
+
+```bash
+cd docs
+make html
+```
+The generated HTML files can be found in `docs/build/html/index.html` and opened in a web browser.
