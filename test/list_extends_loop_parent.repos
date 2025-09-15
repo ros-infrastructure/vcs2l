@@ -1,8 +1,0 @@
-# Parent file that creates an extends a circular import on its child.
----
-extends: list_extends_loop_child.repos
-repositories:
-  vcs2l:
-    type: git
-    url: https://github.com/ros-infrastructure/vcs2l.git
-    version: main

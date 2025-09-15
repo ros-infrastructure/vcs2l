@@ -92,28 +92,107 @@ Only for this command vcs2l supports the pseudo clients `tar` and `zip` which fe
 
 ### Import with extends functionality
 
-The `vcs import` command supports an `extends` key at the top level of the YAML file.
-The value of that key is a path or URL to another YAML file which is imported first.
-This parent file can itself also contain the key to chain multiple files.
-The child is given precedence over the parent in case of duplicate repository entries.
+The `vcs import` command supports an `extends` key at the top level of the YAML file. The value of that key is a path or URL to another YAML file which is imported first.
+This base file can itself also contain the key to chain multiple files. The extension to this base file is given precedence over the parent in case of duplicate repository entries.
+
+#### Normal Extension
+
+For instance, consider the following two files:
+
+- **`base.repos`**: contains three repositories `vcs2l`, `immutable/hash` and `immutable/tag`, checked out at specific versions.
+
+   ```yaml
+   ---
+   repositories:
+     vcs2l:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: main
+     immutable/hash:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 377d5b3d03c212f015cc832fdb368f4534d0d583
+     immutable/tag:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 1.1.3
+   ```
+
+- **`base_extension.repos`**: extends the base file and overrides the version of `immutable/hash` and `immutable/tag` repositories.
+
+   ```yaml
+   ---
+   extends: base.repos
+   repositories:
+     immutable/hash:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 25e4ae2f1dd28b0efcd656f4b1c9679d8a7d6c22
+     immutable/tag:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 1.1.5
+   ```
+The resulting extension import would import vcs2l at version `main`, `immutable/hash` at version `25e4ae2` and `immutable/tag` at version `1.1.5`.
+
+#### Circular Loop Protection
+
 In order to avoid infinite loops in case of circular imports the tool detects already imported files and raises an error if such a file is encountered again.
 
-```yaml
-# parent.repos
-repositories:
-  vcs2l:
-    type: git
-    url: git@github.com:ros-infrastructure/vcs2l.git
-    version: main
+For instance, consider the following two files:
 
-# child.repos
-extends: parent.repos
-repositories:
-  vcs2l:
-    type: git
-    url: https://github.com/ros-infrastructure/vcs2l.git
-    version: 1.1.5
+- **`loop_base.repos`**: extends the `loop_extension.repos` file, and contains two repositories `vcs2l` and `immutable/tag`.
+
+   ```yaml
+   ---
+   extends: loop_extension.repos
+   repositories:
+     vcs2l:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: main
+     immutable/tag:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 1.1.3
+   ```
+
+- **`loop_extension.repos`**: extends the `loop_base.repos` file, and modifies the version of `immutable/tag` with `1.1.5`.
+
+   ```yaml
+   ---
+   extends: loop_base.repos
+   repositories:
+     immutable/tag:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 1.1.5
+   ```
+The resulting extension import would prevent the download and raise the following error:
+
+```bash
+Circular import detected: <relative-path>/loop_extension.repos
 ```
+
+#### File path behaviour
+
+Currently there are two ways to specify the path to the repository file passed to `vcs import`:
+
+1. **Recommended**: Using `--input`.
+
+   * For instance: `vcs import --input my.repos <destination-path>`
+
+   * The extended files are searched relative to the location of `my.repos`.
+
+   * You do not require to be in the same directory as `my.repos` to run the command.
+
+2. Using the input redirection operator `<` to pass a local file path via `stdin`.
+
+   * For instance: `vcs import < my.repos <destination-path>`
+
+    * The extended files are searched relative to the current working directory.
+
+    * Therefore, you have to be in the **same** directory as `my.repos` to run the command. In addition, all the extended files must also be relative to the current working directory.
 
 ### Delete set of repositories
 

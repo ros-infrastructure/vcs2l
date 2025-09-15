@@ -1,6 +1,6 @@
-# Child file that creates an extends a circular import on its parent.
+# Repositories extension file that creates an extends a circular import on its base.
 ---
-extends: list_extends_loop_parent.repos
+extends: loop_base.repos
 repositories:
   vcs2l:
     type: git
