@@ -25,6 +25,9 @@ REPOS_FILE = os.path.join(os.path.dirname(__file__), 'list.repos')
 REPOS_FILE_URL = file_uri_scheme + REPOS_FILE
 REPOS2_FILE = os.path.join(os.path.dirname(__file__), 'list2.repos')
 REPOS_EXTENDS_FILE = os.path.join(os.path.dirname(__file__), 'list_extension.repos')
+REPOS_MULTIPLE_EXTENDS_FILE = os.path.join(
+    os.path.dirname(__file__), 'list_multiple_extension.repos'
+)
 REPOS_EXTENDS_LOOP_FILE = os.path.join(
     os.path.dirname(__file__), 'loop_extension.repos'
 )
@@ -354,6 +357,10 @@ class TestCommands(StagedReposFile):
         with self.assertRaises(subprocess.CalledProcessError) as e:
             run_command('import', ['--input', REPOS_EXTENDS_LOOP_FILE, '.'])
         self.assertIn(b'Circular import detected:', e.exception.output)
+
+    def test_import_multiple_extends(self):
+        """Test import with multiple extends functionality."""
+        self.import_common('import_multiple_extends', REPOS_MULTIPLE_EXTENDS_FILE)
 
     def test_validate(self):
         output = run_command('validate', ['--input', self.repos_file_path])

@@ -129,27 +129,37 @@ def get_repositories(yaml_file, visited_files=None):
         combined_repos = {}
 
         if 'extends' in root:
-            parent_file = root['extends']
+            parent_files = root['extends']
+            # Convert single file to list for consistent processing
+            if isinstance(parent_files, str):
+                parent_files = [parent_files]
 
-            # If absolute path is not valid, try relative to current file
-            if not os.path.isabs(parent_file):
-                current_dir = os.path.dirname(current_file_path)
-                parent_file = os.path.join(current_dir, parent_file)
-
-            if not os.path.exists(parent_file):
-                raise RuntimeError(f'Parent file not found: {parent_file}')
-
-            try:
-                # Recursively get repositories from parent file
-                with open(parent_file, 'r', encoding='utf-8') as parent_f:
-                    parent_repos = get_repositories(parent_f, visited_files.copy())
-                    combined_repos.update(parent_repos)
-            except Exception as e:
-                if str(e).startswith('Circular import detected:'):
-                    raise
+            # Check for duplicate entries in extends
+            if len(parent_files) != len(set(parent_files)):
                 raise RuntimeError(
-                    f'Error reading parent file {parent_file}: \n{str(e)}'
-                ) from e
+                    f'Duplicate entries found in extends in file: {current_file_path}'
+                )
+
+            for parent_file in parent_files:
+                # If absolute path is not valid, try relative to current file
+                if not os.path.isabs(parent_file):
+                    current_dir = os.path.dirname(current_file_path)
+                    parent_file = os.path.join(current_dir, parent_file)
+
+                if not os.path.exists(parent_file):
+                    raise RuntimeError(f'Parent file not found: {parent_file}')
+
+                try:
+                    # Recursively get repositories from parent file
+                    with open(parent_file, 'r', encoding='utf-8') as parent_f:
+                        parent_repos = get_repositories(parent_f, visited_files.copy())
+                        combined_repos.update(parent_repos)
+                except Exception as e:
+                    if str(e).startswith('Circular import detected:'):
+                        raise
+                    raise RuntimeError(
+                        f'Error reading parent file {parent_file}: \n{str(e)}'
+                    ) from e
 
         current_repos = get_repositories_from_root(root)
         combined_repos.update(current_repos)
@@ -159,9 +169,7 @@ def get_repositories(yaml_file, visited_files=None):
     except FileNotFoundError as e:
         raise RuntimeError(f'File not found: {yaml_file}') from e
     except yaml.YAMLError as e:
-        raise RuntimeError(
-            f'Error parsing YAML file {yaml_file}: {str(e)}'
-        ) from e
+        raise RuntimeError(f'Error parsing YAML file {yaml_file}: {str(e)}') from e
     finally:
         # Remove current file from visited set when leaving this call
         visited_files.discard(current_file_path)

@@ -135,6 +135,64 @@ For instance, consider the following two files:
    ```
 The resulting extension import would import vcs2l at version `main`, `immutable/hash` at version `25e4ae2` and `immutable/tag` at version `1.1.5`.
 
+#### Multiple Extensions
+
+The `extends` key also supports a list of files to extend from. The files are imported in the order they are specified and the precedence is given to the last file in case of duplicate repository entries.
+
+For instance, consider the following three files:
+
+- **`base_1.repos`**: contains two repositories `vcs2l` and `immutable/hash`, checked out at `1.1.3`.
+
+   ```yaml
+   ---
+   repositories:
+    immutable/hash:
+      type: git
+      url: https://github.com/ros-infrastructure/vcs2l.git
+      version: e700793cb2b8d25ce83a611561bd167293fd66eb  # 1.1.3
+     vcs2l:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 1.1.3
+    ```
+
+- **`base_2.repos`**: contains two repositories `vcs2l` and `immutable/hash`, checked out at `1.1.4`.
+
+   ```yaml
+   ---
+   repositories:
+    immutable/hash:
+      type: git
+      url: https://github.com/ros-infrastructure/vcs2l.git
+      version: 2c7ff89d12d8a77c36b60d1f7ba3039cdd3f742b  # 1.1.4
+     vcs2l:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 1.1.4
+  ```
+
+- **`multiple_extension.repos`**: extends both base files and overrides the version of `vcs2l` repository.
+
+   ```yaml
+   ---
+   extends:
+     - base_1.repos  # Lower priority
+     - base_2.repos # Higher priority
+   repositories:
+     vcs2l:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 1.1.5
+   ```
+
+The resulting extension import would import `immutable/hash` at version `1.1.4` (from `base_2.repos`) and `vcs2l` at version `1.1.5`.
+
+Duplicate file names in the `extends` list are not allowed and would raise the following error:
+
+```bash
+Duplicate entries found in extends in file: <relative-path>/multiple_extension.repos
+```
+
 #### Circular Loop Protection
 
 In order to avoid infinite loops in case of circular imports the tool detects already imported files and raises an error if such a file is encountered again.
