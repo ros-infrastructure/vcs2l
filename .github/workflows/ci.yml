@@ -44,7 +44,7 @@ jobs:
       - name: Install dependencies (Ubuntu)
         run: |
           sudo apt-get update
-          sudo apt-get install -y subversion mercurial
+          sudo apt-get install -y --no-install-recommends subversion mercurial
         if: startsWith(matrix.os, 'ubuntu')
 
       - name: Test with pytest
