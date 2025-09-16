@@ -50,4 +50,4 @@ jobs:
       - name: Test with pytest
         run: |
           pip install --upgrade .[test]
-          ${{ startsWith(matrix.os, 'windows') && 'set PYTHONPATH=%cd% &&' || 'PYTHONPATH=`pwd`' }} pytest -s -v test
+          ${{ startsWith(matrix.os, 'windows') && 'set PYTHONPATH=%cd% &&' || 'PYTHONPATH=`pwd`' }} python3 -m pytest -s -v test
