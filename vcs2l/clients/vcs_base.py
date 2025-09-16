@@ -69,6 +69,10 @@ class VcsClientBase(object):
                 }
         return None
 
+    def get_path(self):
+        """Get the local path of the repository."""
+        return self.path
+
     def export_repository(self, version, basepath):
         """Export the repository at the given version to the given basepath.
 
