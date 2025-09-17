@@ -2,6 +2,7 @@
 select = [
     'F',  # Pyflakes
     'I',  # isort
+    'PLC0415' # Pylint rule to ensure import should be on top of the file
 ]
 
 [format]
