@@ -2,6 +2,7 @@ import argparse
 import sys
 
 from vcs2l.clients import vcs2l_clients
+from vcs2l.clients.none import NoneClient
 from vcs2l.commands.command import Command, add_common_arguments
 from vcs2l.commands.import_ import get_repositories
 from vcs2l.executor import ansi, execute_jobs, output_results
@@ -40,8 +41,6 @@ def generate_jobs(repos, args):
     for path, repo in repos.items():
         clients = [c for c in vcs2l_clients if c.type == repo['type']]
         if not clients:
-            from vcs2l.clients.none import NoneClient
-
             job = {
                 'client': NoneClient(path),
                 'command': None,
