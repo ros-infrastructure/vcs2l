@@ -2,12 +2,15 @@ import os
 import subprocess
 import sys
 import unittest
+from io import StringIO
 from shutil import which
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+import vcs2l.executor as executor
+from vcs2l.clients.git import GitClient
+from vcs2l.commands.pull import main
+from vcs2l.util import rmtree
 
-from vcs2l.clients.git import GitClient  # noqa: E402
-from vcs2l.util import rmtree  # noqa: E402
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 file_uri_scheme = 'file://' if sys.platform != 'win32' else 'file:///'
 
@@ -113,10 +116,6 @@ class TestCommands(unittest.TestCase):
         self.assertEqual(output, expected)
 
     def test_pull_api(self):
-        from io import StringIO
-
-        from vcs2l.commands.pull import main
-
         stdout_stderr = StringIO()
 
         # change and restore cwd
@@ -124,8 +123,6 @@ class TestCommands(unittest.TestCase):
         os.chdir(TEST_WORKSPACE)
         try:
             # change and restore USE_COLOR flag
-            from vcs2l import executor
-
             use_color_bck = executor.USE_COLOR
             executor.USE_COLOR = False
             try:

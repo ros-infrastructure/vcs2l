@@ -5,6 +5,8 @@ import threading
 import traceback
 from queue import Empty, Queue
 
+import vcs2l.streams as streams
+
 logger = logging.getLogger(__name__)
 logging.basicConfig()
 
@@ -20,12 +22,12 @@ def fix_output_path(path):
 
 
 def output_repositories(clients):
-    from vcs2l.streams import stdout
-
     ordered_clients = {client.path: client for client in clients}
     for k in sorted(ordered_clients.keys()):
         client = ordered_clients[k]
-        print('%s (%s)' % (fix_output_path(k), client.__class__.type), file=stdout)
+        print(
+            '%s (%s)' % (fix_output_path(k), client.__class__.type), file=streams.stdout
+        )
 
 
 def generate_jobs(clients, command):
@@ -76,8 +78,6 @@ def get_ready_job(jobs):
 
 
 def execute_jobs(jobs, show_progress=False, number_of_workers=10, debug_jobs=False):
-    from vcs2l.streams import stdout
-
     if debug_jobs:
         logger.setLevel(logging.DEBUG)
 
@@ -117,14 +117,14 @@ def execute_jobs(jobs, show_progress=False, number_of_workers=10, debug_jobs=Fal
         running_job_paths.remove(result['job']['client'].path)
         if show_progress and len(jobs) > 1:
             if result['returncode'] == NotImplemented:
-                stdout.write('s')
+                streams.stdout.write('s')
             elif result['returncode']:
-                stdout.write('E')
+                streams.stdout.write('E')
             else:
-                stdout.write('.')
+                streams.stdout.write('.')
             if debug_jobs:
-                stdout.write('\n')
-            stdout.flush()
+                streams.stdout.write('\n')
+            streams.stdout.flush()
         result.update(job)
         results.append(result)
         if pending_jobs:
@@ -141,7 +141,7 @@ def execute_jobs(jobs, show_progress=False, number_of_workers=10, debug_jobs=Fal
         if running_job_paths:
             logger.debug('ongoing ' + str(running_job_paths))
     if show_progress and len(jobs) > 1 and not debug_jobs:
-        print('', file=stdout)  # finish progress line
+        print('', file=streams.stdout)  # finish progress line
 
     # join all workers
     for w in workers:
@@ -220,8 +220,6 @@ class Worker(threading.Thread):
 
 
 def output_result(result, hide_empty=False):
-    from vcs2l.streams import stdout
-
     output = result['output']
     if hide_empty and result['returncode'] is None:
         output = ''
@@ -247,13 +245,15 @@ def output_result(result, hide_empty=False):
             + client.__class__.type
             + ') ==='
             + ansi('reset'),
-            file=stdout,
+            file=streams.stdout,
         )
     if output:
         try:
-            print(output, file=stdout)
+            print(output, file=streams.stdout)
         except UnicodeEncodeError:
-            print(output.encode(sys.getdefaultencoding(), 'replace'), file=stdout)
+            print(
+                output.encode(sys.getdefaultencoding(), 'replace'), file=streams.stdout
+            )
 
 
 def output_results(results, output_handler=output_result, hide_empty=False):

@@ -8,6 +8,7 @@ import yaml
 
 from vcs2l import __version__ as vcs2l_version
 from vcs2l.clients import vcs2l_clients
+from vcs2l.clients.none import NoneClient
 from vcs2l.clients.vcs_base import run_command
 from vcs2l.commands.command import Command, add_common_arguments
 from vcs2l.executor import ansi, execute_jobs, output_repositories, output_results
@@ -189,8 +190,6 @@ def generate_jobs(repos, args):
         path = os.path.join(args.path, path)
         clients = [c for c in vcs2l_clients if c.type == repo['type']]
         if not clients:
-            from vcs2l.clients.none import NoneClient
-
             job = {
                 'client': NoneClient(path),
                 'command': None,
