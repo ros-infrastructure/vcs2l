@@ -1,9 +1,9 @@
 ......
 === ./immutable/hash (git) ===
 === ./immutable/hash_tar (tar) ===
-Downloaded tarball from 'https://github.com/ros-infrastructure/vcs2l/archive/377d5b3d03c212f015cc832fdb368f4534d0d583.tar.gz' and unpacked it
+Downloaded tarball from 'file:///vcstmp/archive.tar.gz' and unpacked it
 === ./immutable/hash_zip (zip) ===
-Downloaded zipfile from 'https://github.com/ros-infrastructure/vcs2l/archive/377d5b3d03c212f015cc832fdb368f4534d0d583.zip' and unpacked it
+Downloaded zipfile from 'file:///vcstmp/archive.zip' and unpacked it
 === ./immutable/tag (git) ===
 === ./vcs2l (git) ===
 === ./without_version (git) ===
