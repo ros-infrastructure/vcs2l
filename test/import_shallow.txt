@@ -2,9 +2,9 @@
 === ./immutable/hash (git) ===
 Initialized empty Git repository in ./immutable/hash/.git/
 
-From https://github.com/ros-infrastructure/vcs2l
- * branch            377d5b3d03c212f015cc832fdb368f4534d0d583 -> FETCH_HEAD
-Note: switching to '377d5b3d03c212f015cc832fdb368f4534d0d583'.
+From file:///vcstmp/gitrepo
+ * branch            5b3504594f7354121cf024dc734bf79e270cffd3 -> FETCH_HEAD
+Note: switching to '5b3504594f7354121cf024dc734bf79e270cffd3'.
 
 You are in 'detached HEAD' state. You can look around, make experimental
 changes and commit them, and you can discard any commits you make in this
@@ -21,15 +21,15 @@ Or undo this operation with:
 
 Turn off this advice by setting config variable advice.detachedHead to false
 
-HEAD is now at 377d5b3... update changelog
+HEAD is now at 5b35045... update changelog
 === ./immutable/hash_tar (tar) ===
-Downloaded tarball from 'https://github.com/ros-infrastructure/vcs2l/archive/377d5b3d03c212f015cc832fdb368f4534d0d583.tar.gz' and unpacked it
+Downloaded tarball from 'file:///vcstmp/archive.tar.gz' and unpacked it
 === ./immutable/hash_zip (zip) ===
-Downloaded zipfile from 'https://github.com/ros-infrastructure/vcs2l/archive/377d5b3d03c212f015cc832fdb368f4534d0d583.zip' and unpacked it
+Downloaded zipfile from 'file:///vcstmp/archive.zip' and unpacked it
 === ./immutable/tag (git) ===
 Initialized empty Git repository in ./immutable/tag/.git/
 
-From https://github.com/ros-infrastructure/vcs2l
+From file:///vcstmp/gitrepo
  * [new tag]         0.1.27     -> 0.1.27
 Note: switching to 'tags/0.1.27'.
 
@@ -48,7 +48,7 @@ Or undo this operation with:
 
 Turn off this advice by setting config variable advice.detachedHead to false
 
-HEAD is now at bf9ca56... 0.1.27
+HEAD is now at 8087b72... 0.1.27
 === ./vcs2l (git) ===
 Cloning into '.'...
 === ./without_version (git) ===

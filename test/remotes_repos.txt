@@ -4,14 +4,14 @@
 ./without_version (git)
 ....
 === ./immutable/hash (git) ===
-origin	https://github.com/ros-infrastructure/vcs2l.git (fetch)
-origin	https://github.com/ros-infrastructure/vcs2l.git (push)
+origin	file:///vcstmp/gitrepo (fetch)
+origin	file:///vcstmp/gitrepo (push)
 === ./immutable/tag (git) ===
-origin	https://github.com/ros-infrastructure/vcs2l.git (fetch)
-origin	https://github.com/ros-infrastructure/vcs2l.git (push)
+origin	file:///vcstmp/gitrepo (fetch)
+origin	file:///vcstmp/gitrepo (push)
 === ./vcs2l (git) ===
-origin	https://github.com/ros-infrastructure/vcs2l.git (fetch)
-origin	https://github.com/ros-infrastructure/vcs2l.git (push)
+origin	file:///vcstmp/gitrepo (fetch)
+origin	file:///vcstmp/gitrepo (push)
 === ./without_version (git) ===
-origin	https://github.com/ros-infrastructure/vcs2l.git (fetch)
-origin	https://github.com/ros-infrastructure/vcs2l.git (push)
+origin	file:///vcstmp/gitrepo (fetch)
+origin	file:///vcstmp/gitrepo (push)
