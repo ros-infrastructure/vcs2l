@@ -193,6 +193,11 @@ class Worker(threading.Thread):
                 }
             result = method(job['command'])
             result['job'] = job
+            if 'shell' in job:
+                shell_executor = getattr(job['client'], 'shell')
+                retcode = shell_executor(job['shell'])
+                if retcode != 0:
+                    logger.warning(f'shell command {job["shell"]} failed after cloning')
             return result
         except Exception as e:
             exc_tb = sys.exc_info()[2]

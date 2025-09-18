@@ -129,6 +129,8 @@ def get_repos_in_vcs2l_format(repositories):
             repo['url'] = attributes['url']
             if 'version' in attributes:
                 repo['version'] = attributes['version']
+            if 'shell' in attributes:
+                repo['shell'] = attributes['shell']
         except KeyError as e:
             print(
                 ansi('yellowf')
@@ -210,6 +212,8 @@ def generate_jobs(repos, args):
             shallow=args.shallow,
         )
         job = {'client': client, 'command': command}
+        if 'shell' in repo:
+            job['shell'] = repo['shell']
         jobs.append(job)
     return jobs
 

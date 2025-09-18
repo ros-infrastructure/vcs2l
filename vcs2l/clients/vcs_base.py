@@ -1,4 +1,5 @@
 import os
+import shlex
 import socket
 import subprocess
 import sys
@@ -20,6 +21,11 @@ class VcsClientBase(object):
             try:
                 return self.import_
             except AttributeError:
+                pass
+        if name == 'shell':
+            try:
+                return self._shell_executor
+            except:
                 pass
         return super(VcsClientBase, self).__getattribute__(name)
 
@@ -69,6 +75,12 @@ class VcsClientBase(object):
                 }
         return None
 
+    def _shell_executor(self, command: str):
+        ret = 0
+        for cmd in command.splitlines():
+            cmd = shlex.split(cmd)
+            ret += subprocess.run(cmd).returncode
+        return ret
 
 def run_command(cmd, cwd, env=None):
     if not os.path.exists(cwd):
