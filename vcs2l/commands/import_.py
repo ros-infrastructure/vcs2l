@@ -11,6 +11,7 @@ from vcs2l.clients import vcs2l_clients
 from vcs2l.clients.none import NoneClient
 from vcs2l.clients.vcs_base import run_command
 from vcs2l.commands.command import Command, add_common_arguments
+from vcs2l.errors import CircularImportError
 from vcs2l.executor import ansi, execute_jobs, output_repositories, output_results
 from vcs2l.streams import set_streams
 
@@ -119,7 +120,7 @@ def get_repositories(yaml_file, visited_files=None):
     current_file_path = os.path.abspath(yaml_file.name)
 
     if current_file_path in visited_files:
-        raise RuntimeError(f'Circular import detected: {current_file_path}')
+        raise CircularImportError(f'Circular import detected: {current_file_path}')
 
     visited_files.add(current_file_path)
 
@@ -155,7 +156,7 @@ def get_repositories(yaml_file, visited_files=None):
                         parent_repos = get_repositories(parent_f, visited_files.copy())
                         combined_repos.update(parent_repos)
                 except Exception as e:
-                    if str(e).startswith('Circular import detected:'):
+                    if isinstance(e, CircularImportError):
                         raise
                     raise RuntimeError(
                         f'Error reading parent file {parent_file}: \n{str(e)}'
