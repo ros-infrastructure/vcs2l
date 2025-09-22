@@ -177,7 +177,7 @@ For instance, consider the following three files:
    ---
    extends:
      - base_1.repos  # Lower priority
-     - base_2.repos # Higher priority
+     - base_2.repos  # Higher priority
    repositories:
      vcs2l:
        type: git
@@ -240,7 +240,7 @@ Currently there are two ways to specify the path to the repository file passed t
 
    * For instance: `vcs import --input my.repos <destination-path>`
 
-   * The extended files are searched relative to the location of `my.repos`.
+   * The extended files are searched relative to the file containing the `extends` key.
 
    * You do not require to be in the same directory as `my.repos` to run the command.
 
