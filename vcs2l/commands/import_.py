@@ -155,9 +155,11 @@ def get_repositories(yaml_file, visited_files=None):
                     with open(parent_file, 'r', encoding='utf-8') as parent_f:
                         parent_repos = get_repositories(parent_f, visited_files.copy())
                         combined_repos.update(parent_repos)
+
+                except CircularImportError:
+                    raise
+
                 except Exception as e:
-                    if isinstance(e, CircularImportError):
-                        raise
                     raise RuntimeError(
                         f'Error reading parent file {parent_file}: \n{str(e)}'
                     ) from e

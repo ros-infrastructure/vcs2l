@@ -248,9 +248,12 @@ Currently there are two ways to specify the path to the repository file passed t
 
    * For instance: `vcs import < my.repos <destination-path>`
 
-    * The extended files are searched relative to the current working directory.
+   * The extended files are searched relative to the current working directory.
 
-    * Therefore, you have to be in the **same** directory as `my.repos` to run the command. In addition, all the extended files must also be relative to the current working directory.
+   * Therefore, you have to be in the **same** directory as `my.repos` to run the command.
+
+     The files being directly extended by the file provided through `stdin` are relative to the current working directory.
+     Any other file being extended is relative to the file extending it.
 
 ### Delete set of repositories
 
