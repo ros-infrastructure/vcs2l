@@ -21,3 +21,10 @@ class UnsupportedPythonVersionError(Vcs2lError):
             f'vcs2l requires Python {min_version} or higher.'
         )
         super().__init__(message)
+
+
+class CircularImportError(Vcs2lError):
+    """Raised when a circular import is detected."""
+
+    def __init__(self, message: str = 'Circular import detected.'):
+        super().__init__(message)
