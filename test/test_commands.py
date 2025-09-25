@@ -1,43 +1,32 @@
 import os
+import re
 import subprocess
 import sys
 import unittest
-from shutil import which
+
+from . import StagedReposFile, StagedReposFile2, to_file_url
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from vcs2l.clients.git import GitClient  # noqa: E402
 from vcs2l.util import rmtree  # noqa: E402
 
-file_uri_scheme = 'file://' if sys.platform != 'win32' else 'file:///'
-
-REPOS_FILE = os.path.join(os.path.dirname(__file__), 'list.repos')
-REPOS_FILE_URL = file_uri_scheme + REPOS_FILE
-REPOS2_FILE = os.path.join(os.path.dirname(__file__), 'list2.repos')
 BAD_REPOS_FILE = os.path.join(os.path.dirname(__file__), 'bad.repos')
 TEST_WORKSPACE = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'test_workspace'
 )
 
-svn = which('svn')
-hg = which('hg')
-if svn:
-    # check if the svn executable is usable (on macOS)
-    # and not only exists to state that the program is not installed
-    try:
-        subprocess.check_call([svn, '--version'])
-    except subprocess.CalledProcessError:
-        svn = False
 
-
-class TestCommands(unittest.TestCase):
+class TestCommands(StagedReposFile):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
+        cls.repos_file_url = to_file_url(cls.repos_file_path)
         assert not os.path.exists(TEST_WORKSPACE)
         os.makedirs(TEST_WORKSPACE)
 
         try:
-            output = run_command('import', ['--input', REPOS_FILE, '.'])
+            output = run_command('import', ['--input', cls.repos_file_path, '.'])
             expected = get_expected_output('import')
             # newer git versions don't append three dots after the commit hash
             assert output == expected or output == expected.replace(b'... ', b' ')
@@ -48,6 +37,7 @@ class TestCommands(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         rmtree(TEST_WORKSPACE)
+        super().tearDownClass()
 
     def test_branch(self):
         output = run_command('branch')
@@ -180,7 +170,9 @@ class TestCommands(unittest.TestCase):
             stderr=subprocess.STDOUT,
             cwd=cwd_without_version,
         )
-        output = run_command('import', ['--skip-existing', '--input', REPOS_FILE, '.'])
+        output = run_command(
+            'import', ['--skip-existing', '--input', self.repos_file_path, '.']
+        )
         expected = get_expected_output('reimport_skip')
         # newer git versions don't append three dots after the commit hash
         assert output == expected or output == expected.replace(b'... ', b' ')
@@ -190,9 +182,11 @@ class TestCommands(unittest.TestCase):
             stderr=subprocess.STDOUT,
             cwd=cwd_without_version,
         )
-        run_command('import', ['--skip-existing', '--input', REPOS_FILE, '.'])
+        run_command('import', ['--skip-existing', '--input', self.repos_file_path, '.'])
 
-        output = run_command('import', ['--force', '--input', REPOS_FILE, '.'])
+        output = run_command(
+            'import', ['--force', '--input', self.repos_file_path, '.']
+        )
         expected = get_expected_output('reimport_force')
         # on Windows, the "Already on 'main'" message is after the
         # "Your branch is up to date with ..." message, so remove it
@@ -218,7 +212,9 @@ class TestCommands(unittest.TestCase):
             ['git', 'remote', 'rm', 'origin'], stderr=subprocess.STDOUT, cwd=cwd_tag
         )
         try:
-            run_command('import', ['--skip-existing', '--input', REPOS_FILE, '.'])
+            run_command(
+                'import', ['--skip-existing', '--input', self.repos_file_path, '.']
+            )
         finally:
             subprocess.check_output(
                 ['git', 'remote', 'rm', 'foo'], stderr=subprocess.STDOUT, cwd=cwd_tag
@@ -229,7 +225,7 @@ class TestCommands(unittest.TestCase):
                     'remote',
                     'add',
                     'origin',
-                    'https://github.com/ros-infrastructure/vcs2l.git',
+                    to_file_url(os.path.join(self.temp_dir.name, 'gitrepo')),
                 ],
                 stderr=subprocess.STDOUT,
                 cwd=cwd_tag,
@@ -241,7 +237,7 @@ class TestCommands(unittest.TestCase):
         try:
             output = run_command(
                 'import',
-                ['--force', '--input', REPOS_FILE, '.'],
+                ['--force', '--input', self.repos_file_path, '.'],
                 subfolder='force-non-empty',
             )
             expected = get_expected_output('import')
@@ -256,7 +252,7 @@ class TestCommands(unittest.TestCase):
         try:
             output = run_command(
                 'import',
-                ['--shallow', '--input', REPOS_FILE, '.'],
+                ['--shallow', '--input', self.repos_file_path, '.'],
                 subfolder='import-shallow',
             )
             # the actual output contains absolute paths
@@ -282,7 +278,7 @@ class TestCommands(unittest.TestCase):
         os.makedirs(workdir)
         try:
             output = run_command(
-                'import', ['--input', REPOS_FILE_URL, '.'], subfolder='import-url'
+                'import', ['--input', self.repos_file_url, '.'], subfolder='import-url'
             )
             # the actual output contains absolute paths
             output = output.replace(
@@ -300,11 +296,11 @@ class TestCommands(unittest.TestCase):
         os.makedirs(workdir)
         try:
             run_command(
-                'import', ['--input', REPOS_FILE_URL, '.'], subfolder='deletion'
+                'import', ['--input', self.repos_file_url, '.'], subfolder='deletion'
             )
             output = run_command(
                 'delete',
-                ['--force', '--input', REPOS_FILE_URL, '.'],
+                ['--force', '--input', self.repos_file_url, '.'],
                 subfolder='deletion',
             )
             expected = get_expected_output('delete')
@@ -328,11 +324,13 @@ class TestCommands(unittest.TestCase):
             rmtree(workdir)
 
     def test_validate(self):
-        output = run_command('validate', ['--input', REPOS_FILE])
+        output = run_command('validate', ['--input', self.repos_file_path])
         expected = get_expected_output('validate')
         self.assertEqual(output, expected)
 
-        output = run_command('validate', ['--hide-empty', '--input', REPOS_FILE])
+        output = run_command(
+            'validate', ['--hide-empty', '--input', self.repos_file_path]
+        )
         expected = get_expected_output('validate_hide')
         # we don't care what order these messages appear in
         output = b'\n'.join(sorted(output.split(b'\n')))
@@ -341,13 +339,6 @@ class TestCommands(unittest.TestCase):
 
         output = run_command('validate', ['--input', BAD_REPOS_FILE])
         expected = get_expected_output('validate_bad')
-        self.assertEqual(output, expected)
-
-    @unittest.skipIf(not svn, '`svn` was not found')
-    @unittest.skipIf(not hg, '`hg` was not found')
-    def test_validate_svn_and_hg(self):
-        output = run_command('validate', ['--input', REPOS2_FILE])
-        expected = get_expected_output('validate2')
         self.assertEqual(output, expected)
 
     def test_remote(self):
@@ -363,6 +354,24 @@ class TestCommands(unittest.TestCase):
         # the following seems to have changed between git 2.10.0 and 2.14.1
         output = output.replace(b'.\nnothing to commit', b'.\n\nnothing to commit')
         expected = get_expected_output('status')
+        self.assertEqual(output, expected)
+
+
+class TestCommands2(StagedReposFile2):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        assert not os.path.exists(TEST_WORKSPACE)
+        os.makedirs(TEST_WORKSPACE)
+
+    @classmethod
+    def tearDownClass(cls):
+        rmtree(TEST_WORKSPACE)
+        super().tearDownClass()
+
+    def test_validate_svn_and_hg(self):
+        output = run_command('validate', ['--input', self.repos_file_path])
+        expected = get_expected_output('validate2')
         self.assertEqual(output, expected)
 
 
@@ -421,6 +430,8 @@ def adapt_command_output(output, cwd=None):
         b'Turn off this advice by setting config variable '
         b'advice.detachedHead to false',
     )
+    # normalize temporary path locations
+    output = re.sub(rb'file://.*\.vcstmp', b'file:///vcstmp', output)
     if sys.platform == 'win32':
         if cwd:
             # on Windows, git prints full path to repos
