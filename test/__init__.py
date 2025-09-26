@@ -63,7 +63,7 @@ class StagedReposFile(unittest.TestCase):
             ('branch', '--quiet', '-D', 'license'),
             ('commit', '--quiet', '--allow-empty', '-m', 'update changelog'),
             ('commit', '--quiet', '--allow-empty', '-m', '0.1.27'),
-            ('tag', '0.1.27'),
+            ('tag', '0.1.27', '-m', '0.1.27'),
             ('commit', '--quiet', '--allow-empty', '-m', "codin' codin' codin'"),
         ):
             subprocess.check_call(

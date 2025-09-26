@@ -188,6 +188,7 @@ class GitClient(VcsClientBase):
                             'ls-remote',
                             remote,
                             'refs/tags/' + tag,
+                            'refs/tags/' + tag + '^{}',
                         ]
                         result_ls_remote = self._run_command(cmd_ls_remote)
                         if result_ls_remote['returncode']:
@@ -197,8 +198,10 @@ class GitClient(VcsClientBase):
                             )
                             return result_ls_remote
                         matches = self._get_hash_ref_tuples(result_ls_remote['output'])
-                        if len(matches) == 1 and matches[0][0] == ref:
-                            ref = tag
+                        for match_hash, _ in matches:
+                            if match_hash == ref:
+                                ref = tag
+                                break
 
                 # determine url of remote
                 result_url = self._get_remote_url(remote)
