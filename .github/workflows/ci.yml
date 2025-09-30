@@ -36,11 +36,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip setuptools wheel
-          python -m pip install --upgrade PyYAML
-
       - name: Install dependencies (macOS)
         run: |
           brew install subversion mercurial
@@ -49,11 +44,19 @@ jobs:
       - name: Install dependencies (Ubuntu)
         run: |
           sudo apt-get update
-          sudo apt-get install -y subversion mercurial
+          sudo apt-get install -y --no-install-recommends subversion mercurial
         if: startsWith(matrix.os, 'ubuntu')
 
       - name: Test with pytest
         run: |
           pip install --upgrade .[test]
-          pip install --upgrade coverage
-          ${{ startsWith(matrix.os, 'windows') && 'set PYTHONPATH=%cd% &&' || 'PYTHONPATH=`pwd`' }} pytest -s -v test
+          ${{ startsWith(matrix.os, 'windows') && 'set PYTHONPATH=%cd% &&' || 'PYTHONPATH=`pwd`' }} python3 -m pytest -s -v test
+
+  codecov:
+    needs: build
+    uses: ros-infrastructure/ci/.github/workflows/pytest.yaml@main
+    with:
+      codecov: true
+      matrix-filter: del(.matrix.os[] | select(. != "ubuntu-latest")) | del(.matrix.python[] | select(. != "3.12"))
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
