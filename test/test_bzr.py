@@ -1,18 +1,18 @@
 """Integration tests for BzrClient class."""
 
 import os
-import sys
 import tarfile
 import tempfile
 import unittest
+from shutil import which
 
 from vcs2l.clients.bzr import BzrClient
 from vcs2l.util import rmtree
 
-windows = sys.platform.startswith('win')
+bzr = which('bzr')
 
 
-@unittest.skipIf(windows, 'Breezy not supported on Windows')
+@unittest.skipIf(not bzr, '`bzr` was not found')
 class TestCheckout(unittest.TestCase):
     """Simple integration tests for BzrClient checkout functionality."""
 
@@ -63,7 +63,7 @@ class TestCheckout(unittest.TestCase):
         self.assertIn('Target path exists and is not empty', str(context.exception))
 
 
-@unittest.skipIf(windows, 'Breezy not supported on Windows')
+@unittest.skipIf(not bzr, '`bzr` was not found')
 class TestExportRepository(unittest.TestCase):
     """Integration tests for BzrClient _export_repository functionality."""
 
