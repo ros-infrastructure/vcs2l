@@ -88,7 +88,7 @@ class TestCheckout(unittest.TestCase):
 
 @unittest.skipIf(not svn, '`svn` was not found')
 class TestSvnExportRepository(unittest.TestCase):
-    """Integration tests for SvnClient _export_repository functionality."""
+    """Integration tests for SvnClient export_repository functionality."""
 
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
@@ -110,7 +110,7 @@ class TestSvnExportRepository(unittest.TestCase):
         try:
             os.chdir(self.repo_path)
 
-            result = client._export_repository('1928014', self.export_path)
+            result = client.export_repository('1928014', self.export_path)
             self.assertTrue(result, 'Export should return True on success')
 
             # Verify tar.gz file was created
@@ -136,7 +136,7 @@ class TestSvnExportRepository(unittest.TestCase):
         try:
             os.chdir(self.repo_path)
 
-            result = client._export_repository('999999999', self.export_path)
+            result = client.export_repository('999999999', self.export_path)
             self.assertFalse(result, 'Export should return False for invalid version')
 
             archive_path = self.export_path + '.tar.gz'
