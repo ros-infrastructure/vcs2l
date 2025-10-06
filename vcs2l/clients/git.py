@@ -1,6 +1,5 @@
 import os
 import subprocess
-import tempfile
 from shutil import which
 
 from vcs2l.clients.vcs_base import VcsClientBase
@@ -792,40 +791,17 @@ class GitClient(VcsClientBase):
             return False
 
         self._check_executable()
-        filepath = '{0}.tar.gz'.format(basepath)
+        filepath = f'{basepath}.tar.gz'
 
-        # If current version matches export version and no local changes, export directly
-        current_sha = self._get_current_version()
-        export_sha = self._get_version_sha(version) if version else current_sha
-        if current_sha == export_sha and self._has_no_local_changes():
-            cmd = [
-                GitClient._executable,
-                'archive',
-                '--format=tar.gz',
-                '--output={}'.format(filepath),
-                version or 'HEAD',
-            ]
-            result = self._run_command(cmd)
-            if result['returncode'] == 0:
-                return filepath
-
-        # Otherwise use temp directory approach
-        tmpd_path = tempfile.mkdtemp()
-        try:
-            tmpgit = GitClient(tmpd_path)
-            if tmpgit.checkout(self.path, version=version, shallow=False):
-                cmd = [
-                    GitClient._executable,
-                    'archive',
-                    '--format=tar.gz',
-                    '--output={}'.format(filepath),
-                    version or 'HEAD',
-                ]
-                result = tmpgit._run_command(cmd)
-                return filepath if result['returncode'] == 0 else False
-            return False
-        finally:
-            rmtree(tmpd_path)
+        cmd = [
+            GitClient._executable,
+            'archive',
+            '--format=tar.gz',
+            f'--output={filepath}',
+            version or 'HEAD',
+        ]
+        result = self._run_command(cmd)
+        return filepath if result['returncode'] == 0 else False
 
     def checkout(self, url, version=None, verbose=False, shallow=False, timeout=None):
         """Clone a git repository to the specified path and checkout a specific version."""
