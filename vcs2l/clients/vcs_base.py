@@ -69,6 +69,41 @@ class VcsClientBase(object):
                 }
         return None
 
+    def get_path(self):
+        """Get the local path of the repository."""
+        return self.path
+
+    def export_repository(self, version, basepath):
+        """Export the repository at the given version to the given basepath.
+
+        Args:
+            version: the version to export
+            basepath: the path to export to
+        Returns:
+            A dict with keys 'cmd', 'cwd', 'output', and 'returncode'.
+        """
+        raise NotImplementedError(
+            'Base class export_repository method must be overridden for client type %s '
+            % self.__class__.type
+        )
+
+    def checkout(self, url, version=None, verbose=False, shallow=False, timeout=None):
+        """Checkout the repository from the given URL.
+
+        Args:
+            url: the URL to checkout from
+            version: the version to checkout (branch, tag, or revision)
+            verbose: whether to run the command in verbose mode
+            shallow: whether to perform a shallow checkout (if supported)
+            timeout: timeout for network operations (if supported)
+        Returns:
+            True on success, False otherwise.
+        """
+        raise NotImplementedError(
+            'Base class checkout method must be overridden for client type %s '
+            % self._vcs_type_name
+        )
+
 
 def run_command(cmd, cwd, env=None):
     if not os.path.exists(cwd):
