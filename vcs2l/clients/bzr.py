@@ -194,7 +194,7 @@ class BzrClient(VcsClientBase):
         result['output'] = branch
         return result
 
-    def _export_repository(self, version, basepath):
+    def export_repository(self, version, basepath):
         """Export the bzr repository at a given version to a tar.gz file."""
         self._check_executable()
 

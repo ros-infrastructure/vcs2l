@@ -65,7 +65,7 @@ class TestCheckout(unittest.TestCase):
 
 @unittest.skipIf(not bzr, '`bzr` was not found')
 class TestExportRepository(unittest.TestCase):
-    """Integration tests for BzrClient _export_repository functionality."""
+    """Integration tests for BzrClient export_repository functionality."""
 
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
@@ -89,7 +89,7 @@ class TestExportRepository(unittest.TestCase):
             os.chdir(self.repo_path)
 
             # Test export with a specific revision
-            result = self.client._export_repository(None, self.export_path)
+            result = self.client.export_repository(None, self.export_path)
             self.assertTrue(result, 'Export should return True on success')
 
             archive_path = self.export_path + '.tar.gz'
@@ -115,7 +115,7 @@ class TestExportRepository(unittest.TestCase):
             os.chdir(self.repo_path)
 
             # Test export with invalid version
-            result = self.client._export_repository('999999999', self.export_path)
+            result = self.client.export_repository('999999999', self.export_path)
             self.assertFalse(result, 'Version is not supported for git repositories.')
 
             archive_path = self.export_path + '.tar.gz'

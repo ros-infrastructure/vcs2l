@@ -340,7 +340,7 @@ class HgClient(VcsClientBase):
         if HgClient._config_color:
             cmd[1:1] = '--color', 'always'
 
-    def _export_repository(self, version, basepath):
+    def export_repository(self, version, basepath):
         """Export the hg repository at a given version to a tar.gz file."""
         self._check_executable()
 

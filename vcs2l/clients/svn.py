@@ -261,7 +261,7 @@ class SvnClient(VcsClientBase):
 
         return {'cmd': cmd, 'cwd': self.path, 'output': output, 'returncode': None}
 
-    def _export_repository(self, version, basepath):
+    def export_repository(self, version, basepath):
         """Export the svn repository at a given version to a tar.gz file."""
         self._check_executable()
 

@@ -64,7 +64,7 @@ class TestCheckout(unittest.TestCase):
 
 @unittest.skipIf(not hg, '`hg` was not found')
 class TestExportRepository(unittest.TestCase):
-    """Integration tests for HgClient _export_repository functionality."""
+    """Integration tests for HgClient export_repository functionality."""
 
     def setUp(self):
         """Set up test fixtures for each test"""
@@ -97,7 +97,7 @@ class TestExportRepository(unittest.TestCase):
 
     def test_export_repository_specific_revision(self):
         """Test exporting a specific revision"""
-        result = self.hg_client._export_repository('1', self.export_base_path)
+        result = self.hg_client.export_repository('1', self.export_base_path)
         self.assertTrue(result, "Export should succeed for revision '1'")
 
         # Verify files were created correctly
@@ -108,7 +108,7 @@ class TestExportRepository(unittest.TestCase):
         """Test exporting with an invalid revision"""
         invalid_revision = 'nonexistent123456789'
 
-        result = self.hg_client._export_repository(
+        result = self.hg_client.export_repository(
             invalid_revision, self.export_base_path
         )
         self.assertFalse(result, 'Export should fail for invalid revision')
