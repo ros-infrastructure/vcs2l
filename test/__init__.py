@@ -19,6 +19,8 @@ def to_file_url(path):
 
 
 class StagedReposFile(unittest.TestCase):
+    """Fixture for testing git, tar, and zip clients."""
+
     _git = which('git')
     _git_env = {
         **os.environ,
@@ -139,6 +141,8 @@ class StagedReposFile(unittest.TestCase):
 
 
 class StagedReposFile2(unittest.TestCase):
+    """Fixture for testing subversion and mercurial clients."""
+
     _svn = which('svn')
     _svnadmin = which('svnadmin')
     _hg = which('hg')
