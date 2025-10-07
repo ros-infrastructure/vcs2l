@@ -3,13 +3,16 @@ import re
 import subprocess
 import sys
 import unittest
+from io import StringIO
+
+import vcs2l.executor as executor
+from vcs2l.clients.git import GitClient
+from vcs2l.commands.pull import main
+from vcs2l.util import rmtree
 
 from . import StagedReposFile, StagedReposFile2, to_file_url
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
-from vcs2l.clients.git import GitClient  # noqa: E402
-from vcs2l.util import rmtree  # noqa: E402
 
 BAD_REPOS_FILE = os.path.join(os.path.dirname(__file__), 'bad.repos')
 TEST_WORKSPACE = os.path.join(
@@ -103,10 +106,6 @@ class TestCommands(StagedReposFile):
         self.assertEqual(output, expected)
 
     def test_pull_api(self):
-        from io import StringIO
-
-        from vcs2l.commands.pull import main
-
         stdout_stderr = StringIO()
 
         # change and restore cwd
@@ -114,8 +113,6 @@ class TestCommands(StagedReposFile):
         os.chdir(TEST_WORKSPACE)
         try:
             # change and restore USE_COLOR flag
-            from vcs2l import executor
-
             use_color_bck = executor.USE_COLOR
             executor.USE_COLOR = False
             try:

@@ -1,6 +1,7 @@
 import argparse
 import sys
 
+from vcs2l import __version__
 from vcs2l.clients import vcs2l_clients
 from vcs2l.commands import vcs2l_commands
 from vcs2l.errors import UnsupportedPythonVersionError
@@ -92,7 +93,6 @@ def get_parser(add_help=True):
         default=False,
         help='Output the available commands along with their descriptions',
     )
-    from vcs2l import __version__
 
     group.add_argument(
         '--version',
