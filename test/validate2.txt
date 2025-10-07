@@ -1,9 +1,9 @@
 ....
 === hg/branch (hg) ===
-Found hg repository 'https://www.mercurial-scm.org/repo/hg-stable' with changeset 'stable'
+Found hg repository 'file:///vcstmp/hgrepo' with changeset 'stable'
 === hg/hash (hg) ===
-Found hg repository 'https://www.mercurial-scm.org/repo/hg-stable' with changeset '6d79894d3460'
+Found hg repository 'file:///vcstmp/hgrepo' with changeset '9bd654917508'
 === hg/tag (hg) ===
-Found hg repository 'https://www.mercurial-scm.org/repo/hg-stable' with changeset '5.8'
+Found hg repository 'file:///vcstmp/hgrepo' with changeset '5.8'
 === svn/rev (svn) ===
-Found svn repository 'https://svn.apache.org/repos/asf/subversion' with revision '1928014'
+Found svn repository 'file:///vcstmp/svnrepo' with revision '1'

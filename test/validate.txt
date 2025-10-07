@@ -1,13 +1,13 @@
 ......
 === immutable/hash (git) ===
-Found git repository 'https://github.com/ros-infrastructure/vcs2l.git' but unable to verify non-branch / non-tag ref '377d5b3d03c212f015cc832fdb368f4534d0d583' without cloning the repo
+Found git repository 'file:///vcstmp/gitrepo' but unable to verify non-branch / non-tag ref '5b3504594f7354121cf024dc734bf79e270cffd3' without cloning the repo
 === immutable/hash_tar (tar) ===
-Tarball url 'https://github.com/ros-infrastructure/vcs2l/archive/377d5b3d03c212f015cc832fdb368f4534d0d583.tar.gz' exists
+Tarball url 'file:///vcstmp/archive.tar.gz' exists
 === immutable/hash_zip (zip) ===
-Zip url 'https://github.com/ros-infrastructure/vcs2l/archive/377d5b3d03c212f015cc832fdb368f4534d0d583.zip' exists
+Zip url 'file:///vcstmp/archive.zip' exists
 === immutable/tag (git) ===
-Found git repository 'https://github.com/ros-infrastructure/vcs2l.git' with tag '0.1.27'
+Found git repository 'file:///vcstmp/gitrepo' with tag '0.1.27'
 === vcs2l (git) ===
-Found git repository 'https://github.com/ros-infrastructure/vcs2l.git' with branch 'main'
+Found git repository 'file:///vcstmp/gitrepo' with branch 'main'
 === without_version (git) ===
-Found git repository 'https://github.com/ros-infrastructure/vcs2l.git' with default branch
+Found git repository 'file:///vcstmp/gitrepo' with default branch

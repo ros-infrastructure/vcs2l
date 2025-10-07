@@ -1,9 +1,9 @@
 repositories:
   hash:
     type: git
-    url: https://github.com/ros-infrastructure/vcs2l.git
-    version: 377d5b3d03c212f015cc832fdb368f4534d0d583
+    url: file:///vcstmp/gitrepo
+    version: 5b3504594f7354121cf024dc734bf79e270cffd3
   tag:
     type: git
-    url: https://github.com/ros-infrastructure/vcs2l.git
+    url: file:///vcstmp/gitrepo
     version: 0.1.27
