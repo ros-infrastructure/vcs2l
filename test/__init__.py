@@ -1,3 +1,5 @@
+"""Fixtures and utilities for testing vcs2l."""
+
 import os
 import shutil
 import subprocess
@@ -75,8 +77,8 @@ class StagedReposFile(unittest.TestCase):
         # Create the archive stage
         archive_path = os.path.join(cls.temp_dir.name, 'archive_dir')
         os.mkdir(archive_path)
-        with open(os.path.join(archive_path, 'file_name.txt'), 'w') as f:
-            f.write('Lorem Ipsum\n')
+        with open(os.path.join(archive_path, 'file_name.txt'), 'wb') as f:
+            f.write(b'Lorem Ipsum\n')
 
         # Create a tar file
         tarball_path = os.path.join(cls.temp_dir.name, 'archive.tar.gz')
@@ -125,13 +127,14 @@ class StagedReposFile(unittest.TestCase):
         }
 
         cls.repos_file_path = os.path.join(cls.temp_dir.name, 'staged.repos')
-        with open(cls.repos_file_path, 'w') as f:
-            yaml.safe_dump({'repositories': repos}, f)
+        with open(cls.repos_file_path, 'wb') as f:
+            yaml.safe_dump({'repositories': repos}, f, encoding='utf-8')
 
     @classmethod
     def tearDownClass(cls):
         cls.repos_file_path = None
-        cls.temp_dir and cls.temp_dir.cleanup()
+        if cls.temp_dir:
+            cls.temp_dir.cleanup()
         cls.temp_dir = None
 
 
@@ -161,8 +164,8 @@ class StagedReposFile2(unittest.TestCase):
             # check if the svn executable is usable (on macOS)
             # and not only exists to state that the program is not installed
             subprocess.check_call([cls._svn, '--version'], stdout=subprocess.DEVNULL)
-        except subprocess.CalledProcessError:
-            raise unittest.SkipTest('`svn` was not found')
+        except subprocess.CalledProcessError as e:
+            raise unittest.SkipTest('`svn` was not found') from e
 
         cls.temp_dir = TemporaryDirectory(suffix='.vcstmp')
 
@@ -240,11 +243,12 @@ class StagedReposFile2(unittest.TestCase):
         }
 
         cls.repos_file_path = os.path.join(cls.temp_dir.name, 'staged.repos')
-        with open(cls.repos_file_path, 'w') as f:
-            yaml.safe_dump({'repositories': repos}, f)
+        with open(cls.repos_file_path, 'wb') as f:
+            yaml.safe_dump({'repositories': repos}, f, encoding='utf-8')
 
     @classmethod
     def tearDownClass(cls):
         cls.repos_file_path = None
-        cls.temp_dir and cls.temp_dir.cleanup()
+        if cls.temp_dir:
+            cls.temp_dir.cleanup()
         cls.temp_dir = None
