@@ -17,10 +17,10 @@ Ubuntu/Debian
 -------------
 Install the Debian package by adding the ``ros2-apt-source`` repository to your system.
 Follow the official guide for your selected ROS Distro namely
-`rolling <https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debs.html#enable-required-repositories>`_,
-`kilted <https://docs.ros.org/en/kilted/Installation/Ubuntu-Install-Debs.html#enable-required-repositories>`_, or
-`jazzy <https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html#enable-required-repositories>`_ for this addition.
-
+`Rolling <https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debs.html#enable-required-repositories>`_,
+`Kilted <https://docs.ros.org/en/kilted/Installation/Ubuntu-Install-Debs.html#enable-required-repositories>`_,
+`Jazzy <https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html#enable-required-repositories>`_ or
+`Humble <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html#setup-sources>_` for this addition.
 This is a **required** step for installing vcs2l on Debian-based systems.
 
 Then, install vcs2l:
