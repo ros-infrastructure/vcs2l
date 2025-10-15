@@ -1,6 +1,19 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package vcs2l
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1.1.6 (2025-10-15)
+------------------
+* Clarify Humble support on installation steps (`#76 <https://github.com/ros-infrastructure/vcs2l/pull/76>`_)
+* Make all tests work offline (`#72 <https://github.com/ros-infrastructure/vcs2l/pull/72>`_)
+* Added Pylint rule to enforce toplevel imports. (`#70 <https://github.com/ros-infrastructure/vcs2l/pull/70>`_)
+* Add Codecov testing workflow (`#53 <https://github.com/ros-infrastructure/vcs2l/pull/53>`_)
+* Fix python version requirement in setup.py (`#73 <https://github.com/ros-infrastructure/vcs2l/pull/73>`_)
+* Simplify CI testing (`#69 <https://github.com/ros-infrastructure/vcs2l/pull/69>`_)
+* Added release playbook for project deployment. (`#55 <https://github.com/ros-infrastructure/vcs2l/pull/55>`_)
+* 🛠️ Bump actions/setup-python from 5.6.0 to 6.0.0 (`#68 <https://github.com/ros-infrastructure/vcs2l/pull/68>`_)
+* Contributors: Clara Berendsen, Scott K Logan, Leander Stephen D'Souza
+
 1.1.5 (2025-09-12)
 ------------------
 * Ignore nondeterministic line ordering in test_commands (`#66 <https://github.com/ros-infrastructure/vcs2l/pull/66>`_)
