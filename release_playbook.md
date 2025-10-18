@@ -28,18 +28,15 @@ This playbook outlines the steps to release a new version of the `vcs2l` project
    git push origin main
    ```
 
-## 2. Tagging the release
-After merging the PR, create a new tag for the release using the following commands:
+## 2. Tagging the release and automated publishing
+* After merging the PR, create a new tag for the repository using the following commands:
 
-```bash
-git checkout main
-git tag x.y.z
-git push origin x.y.z
-```
+   ```bash
+   git checkout main
+   git tag x.y.z
+   git push origin x.y.z
+   ```
+* Pushing the tag will automatically create a GitHub release with assets - `*.whl` and `*.tar.gz`.
+  The release notes will be generated automatically based on the merged PRs since the last release.
 
-## 3. Publishing the release on GitHub
-* Navigate to the [Releases](https://github.com/ros-infrastructure/vcs2l/releases/new) page, and select the tag you just pushed.
-* Fill in the release title as `x.y.z`.
-* Create the release notes by using the `Generate release notes` button.
-* Publish the release by setting it as the latest release.
-* This will automatically trigger the GitHub Actions workflow to publish the package to PyPI.
+* This would also publish the package onto PyPI with the newly created version.
