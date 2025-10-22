@@ -15,6 +15,7 @@ from . import StagedReposFile, StagedReposFile2, to_file_url
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 BAD_REPOS_FILE = os.path.join(os.path.dirname(__file__), 'bad.repos')
+LIST_REPOS_FILE = os.path.join(os.path.dirname(__file__), 'list_repos.yaml')
 TEST_WORKSPACE = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'test_workspace'
 )
@@ -22,8 +23,9 @@ TEST_WORKSPACE = os.path.join(
 
 class TestCommands(StagedReposFile):
     @classmethod
-    def setUpClass(cls):
-        cls.repos_file_path = to_file_url(cls.repos_file_path)
+    def setUpClass(cls, repos_file=None):
+        super().setUpClass(repos_file if repos_file is not None else LIST_REPOS_FILE)
+
         assert not os.path.exists(TEST_WORKSPACE)
         os.makedirs(TEST_WORKSPACE)
 

@@ -1,6 +1,7 @@
 """Fixtures and utilities for testing vcs2l."""
 
 import os
+import re
 import shutil
 import subprocess
 import tarfile
@@ -18,115 +19,121 @@ def to_file_url(path):
     return urljoin('file:', pathname2url(path))
 
 
+def extract_commit(url):
+    """Extract commit hash from version for zip/tar clients."""
+    m = re.search(r'vcs2l-([a-fA-F0-9]{40})', url)
+    return m.group(1) if m else None
+
+
+def setup_git_repository(temp_dir):
+    """Create a git repository for testing."""
+    repo_root = os.path.dirname(os.path.dirname(__file__))
+    gitrepo_path = os.path.join(temp_dir.name, 'gitrepo')
+
+    subprocess.check_call(['git', 'clone', '--branch', 'main', repo_root, gitrepo_path])
+
+    return gitrepo_path
+
+
+def setup_tar_archive(temp_dir, target_commit):
+    """Create a tar archive for testing by checking out the target commit."""
+    gitrepo_path = os.path.join(temp_dir.name, 'gitrepo')
+    tar_path = os.path.join(temp_dir.name, 'tar')
+
+    subprocess.check_call(['git', 'clone', gitrepo_path, tar_path])
+    subprocess.check_call(['git', 'checkout', target_commit], cwd=tar_path)
+    shutil.rmtree(os.path.join(tar_path, '.git'))  # .git not present in tar archive
+
+    archive_dir = os.path.join(temp_dir.name, 'archive')
+    os.makedirs(archive_dir, exist_ok=True)
+    tarball_path = os.path.join(archive_dir, f'{target_commit}.tar.gz')
+
+    with tarfile.TarFile.open(tarball_path, 'w:gz') as tar:
+        tar.add(tar_path, arcname=f'vcs2l-{target_commit}')
+
+    return tarball_path
+
+
+def setup_zip_archive(temp_dir, target_commit):
+    """Create a zip archive for testing by checking out the target commit."""
+    gitrepo_path = os.path.join(temp_dir.name, 'gitrepo')
+    zip_path = os.path.join(temp_dir.name, 'zip')
+
+    subprocess.check_call(['git', 'clone', gitrepo_path, zip_path])
+    subprocess.check_call(['git', 'checkout', target_commit], cwd=zip_path)
+    shutil.rmtree(os.path.join(zip_path, '.git'))  # .git not present in zip archive
+
+    archive_dir = os.path.join(temp_dir.name, 'archive')
+    os.makedirs(archive_dir, exist_ok=True)
+    zipfile_path = os.path.join(archive_dir, f'{target_commit}.zip')
+
+    with zipfile.ZipFile(zipfile_path, 'w') as zipf:
+        for root, dirs, files in os.walk(zip_path):
+            # Add directory entries
+            for dir_name in dirs:
+                dir_path = os.path.join(root, dir_name)
+                arcname = (
+                    os.path.join(
+                        f'vcs2l-{target_commit}', os.path.relpath(dir_path, zip_path)
+                    )
+                    + '/'
+                )
+                zipf.write(dir_path, arcname)
+
+            # Add files
+            for file in files:
+                file_path = os.path.join(root, file)
+                arcname = os.path.join(
+                    f'vcs2l-{target_commit}', os.path.relpath(file_path, zip_path)
+                )
+                zipf.write(file_path, arcname)
+
+    return zipfile_path
+
+
 class StagedReposFile(unittest.TestCase):
     """Fixture for testing git, tar, and zip clients."""
 
     _git = which('git')
-    _git_env = {
-        **os.environ,
-        'GIT_AUTHOR_NAME': 'vcs2l',
-        'GIT_AUTHOR_DATE': '2005-01-01T00:00:00-06:00',
-        'GIT_AUTHOR_EMAIL': 'vcs2l@example.com',
-        'GIT_COMMITTER_NAME': 'vcs2l',
-        'GIT_COMMITTER_DATE': '2005-01-01T00:00:00-06:00',
-        'GIT_COMMITTER_EMAIL': 'vcs2l@example.com',
-        'GIT_CONFIG_GLOBAL': os.path.join(os.path.dirname(__file__), '.gitconfig'),
-        'LANG': 'en_US.UTF-8',
-    }
-    _commit_date = '2005-01-01T00:00:00'
-
     temp_dir = None
     repos_file_path = None
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls, repos_file=None):
         if not cls._git:
             raise unittest.SkipTest('`git` was not found')
 
         cls.temp_dir = TemporaryDirectory(suffix='.vcstmp')
 
-        # Create the staged git repository
-        gitrepo_path = os.path.join(cls.temp_dir.name, 'gitrepo')
-        os.mkdir(gitrepo_path)
-        shutil.copy(
-            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'LICENSE'),
-            gitrepo_path,
-        )
-        for command in (
-            ('init', '--quiet', '.'),
-            ('commit', '--quiet', '--allow-empty', '-m', '0.1.26'),
-            ('tag', '0.1.26'),
-            ('checkout', '--quiet', '-b', 'license'),
-            ('add', 'LICENSE'),
-            ('commit', '--quiet', '-m', 'Add LICENSE'),
-            ('checkout', '--quiet', 'main'),
-            ('merge', '--no-ff', '--quiet', 'license', '-m', "Merge branch 'license'"),
-            ('branch', '--quiet', '-D', 'license'),
-            ('commit', '--quiet', '--allow-empty', '-m', 'update changelog'),
-            ('commit', '--quiet', '--allow-empty', '-m', '0.1.27'),
-            ('tag', '0.1.27'),
-            ('commit', '--quiet', '--allow-empty', '-m', "codin' codin' codin'"),
-        ):
-            subprocess.check_call(
-                [
-                    cls._git,
-                    *command,
-                ],
-                cwd=gitrepo_path,
-                env=cls._git_env,
-            )
+        if repos_file is None:
+            raise ValueError('A repos file must be provided')
 
-        # Create the archive stage
-        archive_path = os.path.join(cls.temp_dir.name, 'archive_dir')
-        os.mkdir(archive_path)
-        with open(os.path.join(archive_path, 'file_name.txt'), 'wb') as f:
-            f.write(b'Lorem Ipsum\n')
+        with open(repos_file, 'r', encoding='utf-8') as f:
+            repos_data = yaml.safe_load(f)
 
-        # Create a tar file
-        tarball_path = os.path.join(cls.temp_dir.name, 'archive.tar.gz')
-        with tarfile.TarFile.open(tarball_path, 'w:gz') as f:
-            f.add(archive_path, 'archive_dir')
+        repos = repos_data.get('repositories')
 
-        # Create a zip file
-        zip_path = os.path.join(cls.temp_dir.name, 'archive.zip')
-        with zipfile.ZipFile(zip_path, mode='w') as f:
-            f.write(
-                os.path.join(archive_path, 'file_name.txt'),
-                os.path.join('archive_dir', 'file_name.txt'),
-            )
+        # Create the temp git repository
+        gitrepo_path = setup_git_repository(cls.temp_dir)
 
-        # Populate the staged.repos file
-        repos = {
-            'immutable/hash': {
-                'type': 'git',
-                'url': to_file_url(gitrepo_path),
-                'version': '5b3504594f7354121cf024dc734bf79e270cffd3',
-            },
-            'immutable/hash_tar': {
-                'type': 'tar',
-                'url': to_file_url(tarball_path),
-                'version': 'archive_dir',
-            },
-            'immutable/hash_zip': {
-                'type': 'zip',
-                'url': to_file_url(zip_path),
-                'version': 'archive_dir',
-            },
-            'immutable/tag': {
-                'type': 'git',
-                'url': to_file_url(gitrepo_path),
-                'version': 'tags/0.1.27',
-            },
-            'vcs2l': {
-                'type': 'git',
-                'url': to_file_url(gitrepo_path),
-                'version': 'heads/main',
-            },
-            'without_version': {
-                'type': 'git',
-                'url': to_file_url(gitrepo_path),
-            },
-        }
+        # Use the existing file as a baseline
+        repos = repos_data['repositories'].copy()
+
+        for repo_name, repo_config in repos.items():
+            if repo_config['type'] == 'git':
+                repos[repo_name]['url'] = to_file_url(gitrepo_path)
+
+            elif repo_config['type'] == 'tar':
+                extracted_commit = extract_commit(repo_config['version'])
+                repos[repo_name]['url'] = to_file_url(
+                    setup_tar_archive(cls.temp_dir, extracted_commit)
+                )
+
+            elif repo_config['type'] == 'zip':
+                extracted_commit = extract_commit(repo_config['version'])
+                repos[repo_name]['url'] = to_file_url(
+                    setup_zip_archive(cls.temp_dir, extracted_commit)
+                )
 
         cls.repos_file_path = os.path.join(cls.temp_dir.name, 'staged.repos')
         with open(cls.repos_file_path, 'wb') as f:

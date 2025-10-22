@@ -1,22 +1,22 @@
 ..
 === ./hash (git) ===
-commit 5b3504594f7354121cf024dc734bf79e270cffd3 (HEAD)
-Author: vcs2l <vcs2l@example.com>
+commit 377d5b3d03c212f015cc832fdb368f4534d0d583 (HEAD)
+Author: Dirk Thomas <dirk-thomas@users.noreply.github.com>
 
     update changelog
 
-commit e1ac7fa53634c69bdb8e181a20d3717e52dea234
-Merge: 89e3430 ec135e9
-Author: vcs2l <vcs2l@example.com>
+commit f01ce3845fa0783bef9f97545e518e0f02cd509a
+Merge: 14f9968 e7770d3
+Author: Dirk Thomas <dirk-thomas@users.noreply.github.com>
 
-    Merge branch 'license'
+    Merge pull request #44 from dirk-thomas/fix_loop_exit
 === ./tag (git) ===
-commit 8087b72504968800cdf54759b11e0b753ec90736 (HEAD, tag: 0.1.27)
-Author: vcs2l <vcs2l@example.com>
+commit bf9ca56de693a02b93ed423bcef589259d75eb0f (HEAD, tag: 0.1.27)
+Author: Dirk Thomas <dirk-thomas@users.noreply.github.com>
 
     0.1.27
 
-commit 5b3504594f7354121cf024dc734bf79e270cffd3
-Author: vcs2l <vcs2l@example.com>
+commit 377d5b3d03c212f015cc832fdb368f4534d0d583
+Author: Dirk Thomas <dirk-thomas@users.noreply.github.com>
 
     update changelog
