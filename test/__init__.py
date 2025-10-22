@@ -14,6 +14,8 @@ from urllib.request import pathname2url
 
 import yaml
 
+REPO_LINK = 'https://github.com/ros-infrastructure/vcs2l.git'
+
 
 def to_file_url(path):
     return urljoin('file:', pathname2url(path))
@@ -30,7 +32,21 @@ def setup_git_repository(temp_dir):
     repo_root = os.path.dirname(os.path.dirname(__file__))
     gitrepo_path = os.path.join(temp_dir.name, 'gitrepo')
 
-    subprocess.check_call(['git', 'clone', '--branch', 'main', repo_root, gitrepo_path])
+    commits_count = int(
+        subprocess.check_output(
+            ['git', 'rev-list', '--count', 'HEAD'], cwd=repo_root
+        ).strip()
+    )
+
+    if commits_count == 1:
+        repo_root = REPO_LINK  # codecov sparsely clones the repo
+
+    subprocess.check_call(['git', 'clone', repo_root, gitrepo_path])
+    try:
+        subprocess.check_call(['git', 'checkout', 'main'], cwd=gitrepo_path)
+    except subprocess.CalledProcessError:
+        # Create branch named 'main' as CI checks out with no branch
+        subprocess.check_call(['git', 'checkout', '-b', 'main'], cwd=gitrepo_path)
 
     return gitrepo_path
 
