@@ -25,7 +25,10 @@ class GitClient(VcsClientBase):
 
     @staticmethod
     def is_repository(path):
-        return os.path.isdir(os.path.join(path, '.git'))
+        """Check if the given path is a git repository or a submodule."""
+        return os.path.isdir(os.path.join(path, '.git')) or os.path.isfile(
+            os.path.join(path, '.git')
+        )
 
     def __init__(self, path):
         super(GitClient, self).__init__(path)
