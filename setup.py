@@ -29,7 +29,7 @@ setup(
             'sphinx-rtd-theme',
         ],
     },
-    packages=find_packages(),
+    packages=find_packages(exclude=['test']),
     author='Dirk Thomas',
     author_email='web@dirk-thomas.net',
     maintainer='ROS Infrastructure Team',
