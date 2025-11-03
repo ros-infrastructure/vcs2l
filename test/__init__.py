@@ -6,16 +6,15 @@ import subprocess
 import tarfile
 import unittest
 import zipfile
+from pathlib import Path
 from shutil import which
 from tempfile import TemporaryDirectory
-from urllib.parse import urljoin
-from urllib.request import pathname2url
 
 import yaml
 
 
 def to_file_url(path):
-    return urljoin('file:', pathname2url(path))
+    return Path(path).as_uri()
 
 
 class StagedReposFile(unittest.TestCase):
