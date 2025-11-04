@@ -15,6 +15,7 @@ from . import StagedReposFile, StagedReposFile2, to_file_url
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 BAD_REPOS_FILE = os.path.join(os.path.dirname(__file__), 'bad.repos')
+LIST_REPOS_FILE = os.path.join(os.path.dirname(__file__), 'list_repos.yaml')
 TEST_WORKSPACE = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'test_workspace'
 )
@@ -22,9 +23,9 @@ TEST_WORKSPACE = os.path.join(
 
 class TestCommands(StagedReposFile):
     @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.repos_file_url = to_file_url(cls.repos_file_path)
+    def setUpClass(cls, repos_file=None):
+        super().setUpClass(repos_file if repos_file is not None else LIST_REPOS_FILE)
+
         assert not os.path.exists(TEST_WORKSPACE)
         os.makedirs(TEST_WORKSPACE)
 
@@ -275,7 +276,7 @@ class TestCommands(StagedReposFile):
         os.makedirs(workdir)
         try:
             output = run_command(
-                'import', ['--input', self.repos_file_url, '.'], subfolder='import-url'
+                'import', ['--input', self.repos_file_path, '.'], subfolder='import-url'
             )
             # the actual output contains absolute paths
             output = output.replace(
@@ -293,11 +294,11 @@ class TestCommands(StagedReposFile):
         os.makedirs(workdir)
         try:
             run_command(
-                'import', ['--input', self.repos_file_url, '.'], subfolder='deletion'
+                'import', ['--input', self.repos_file_path, '.'], subfolder='deletion'
             )
             output = run_command(
                 'delete',
-                ['--force', '--input', self.repos_file_url, '.'],
+                ['--force', '--input', self.repos_file_path, '.'],
                 subfolder='deletion',
             )
             expected = get_expected_output('delete')
