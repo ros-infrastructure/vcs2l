@@ -1,6 +1,7 @@
 ......
 === ./immutable/hash (git) ===
-
+From file:///vcstmp/gitrepo
+ * branch            5b3504594f7354121cf024dc734bf79e270cffd3 -> FETCH_HEAD
 HEAD is now at 5b35045... update changelog
 === ./immutable/hash_tar (tar) ===
 Downloaded tarball from 'file:///vcstmp/archive.tar.gz' and unpacked it
