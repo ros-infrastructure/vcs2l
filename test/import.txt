@@ -1,6 +1,8 @@
 ......
 === ./immutable/hash (git) ===
 Cloning into '.'...
+From file:///vcstmp/gitrepo
+ * branch            5b3504594f7354121cf024dc734bf79e270cffd3 -> FETCH_HEAD
 Note: switching to '5b3504594f7354121cf024dc734bf79e270cffd3'.
 
 You are in 'detached HEAD' state. You can look around, make experimental
