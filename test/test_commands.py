@@ -4,6 +4,7 @@ import subprocess
 import sys
 import unittest
 from io import StringIO
+from shutil import which
 
 import vcs2l.executor as executor
 from vcs2l.clients.git import GitClient
@@ -18,6 +19,10 @@ BAD_REPOS_FILE = os.path.join(os.path.dirname(__file__), 'bad.repos')
 TEST_WORKSPACE = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'test_workspace'
 )
+
+svn = which('svn')
+svnadmin = which('svnadmin')
+hg = which('hg')
 
 
 class TestCommands(StagedReposFile):
@@ -354,6 +359,7 @@ class TestCommands(StagedReposFile):
         self.assertEqual(output, expected)
 
 
+@unittest.skipIf(not svn or not svnadmin or not hg, 'svn or hg was not found')
 class TestCommands2(StagedReposFile2):
     @classmethod
     def setUpClass(cls):
