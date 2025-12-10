@@ -326,13 +326,18 @@ class GitClient(VcsClientBase):
 
             # fetch updates for existing repo
             cmd_fetch = [GitClient._executable, 'fetch', remote]
-            if command.shallow:
+
+            # Determine version type for both shallow and non-shallow modes
+            version_type, version_name = None, None
+            if checkout_version is not None:
                 result_version_type, version_name = self._check_version_type(
                     command.url, checkout_version, command.retry
                 )
                 if result_version_type['returncode']:
                     return result_version_type
                 version_type = result_version_type['version_type']
+
+            if command.shallow:
                 if version_type == 'branch':
                     cmd_fetch.append(
                         'refs/heads/%s:refs/remotes/%s/%s'
@@ -348,7 +353,9 @@ class GitClient(VcsClientBase):
                     assert False
                 cmd_fetch += ['--depth', '1']
             else:
-                version_type = None
+                # For non-shallow mode, only fetch specific commit hashes
+                if version_type == 'hash':
+                    cmd_fetch.append(checkout_version)
             result_fetch = self._run_command(cmd_fetch, retry=command.retry)
             if result_fetch['returncode']:
                 return result_fetch
@@ -425,6 +432,22 @@ class GitClient(VcsClientBase):
                     return result_clone
                 cmd = result_clone['cmd']
                 output = result_clone['output']
+
+                # For non-shallow clones with commit hashes, fetch the specific commit
+                if not command.shallow and version_type == 'hash':
+                    cmd_fetch_hash = [
+                        GitClient._executable,
+                        'fetch',
+                        'origin',
+                        command.version,
+                    ]
+                    result_fetch_hash = self._run_command(
+                        cmd_fetch_hash, retry=command.retry
+                    )
+                    if result_fetch_hash['returncode']:
+                        return result_fetch_hash
+                    cmd += ' && ' + ' '.join(cmd_fetch_hash)
+                    output = '\n'.join([output, result_fetch_hash['output']])
             else:
                 # getting a hash or tag with a depth of 1 can't use 'clone'
                 cmd_init = [GitClient._executable, 'init']
