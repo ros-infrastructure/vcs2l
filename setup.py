@@ -11,7 +11,7 @@ with open(
 ) as f:
     long_description = f.read()
 
-setup(
+kwargs = dict(
     name='vcs2l',
     version=__version__,
     python_requires='>=3.6',
@@ -85,3 +85,28 @@ setup(
         ]
     },
 )
+
+
+if os.environ.get('VCS2L_VCSTOOL_SHIM', ''):
+    vcs2l_suffixes = [pkg[5:] for pkg in kwargs['packages'] if pkg.startswith('vcs2l')]
+
+    kwargs.update(
+        dict(
+            name=kwargs['name'] + '_vcstool_shim',
+            install_requires=kwargs['install_requires'] + ['vcs2l==' + __version__],
+            extras_require={},
+            packages=['vcstool' + suffix for suffix in vcs2l_suffixes],
+            package_dir={
+                'vcstool' + suffix: ('vcs2l' + suffix).replace('.', '/')
+                for suffix in vcs2l_suffixes
+            },
+            description='Backwards compatible vcstool shim package',
+            long_description=None,
+            long_description_content_type=None,
+            data_files=[],
+            entry_points={},
+        )
+    )
+
+
+setup(**kwargs)
