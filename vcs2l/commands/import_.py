@@ -28,6 +28,7 @@ class ImportCommand(Command):
         self.skip_existing = args.skip_existing
         self.recursive = recursive
         self.shallow = shallow
+        self.blobless_clone = args.blobless_clone
 
 
 def get_parser():
@@ -74,6 +75,12 @@ def get_parser():
         default=False,
         help="Don't overwrite existing directories or change custom checkouts "
         'in repos using the same URL (but fetch repos with same URL)',
+    )
+    group.add_argument(
+        '--blobless-clone',
+        action='store_true',
+        default=False,
+        help='Only clone the commit history first, then checkout to the target version to obtain files',
     )
 
     return parser
