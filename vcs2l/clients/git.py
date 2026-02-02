@@ -326,6 +326,8 @@ class GitClient(VcsClientBase):
 
             # fetch updates for existing repo
             cmd_fetch = [GitClient._executable, 'fetch', remote]
+            if command.blobless_clone:
+                cmd_fetch.append('--filter=blob:none')
             if command.shallow:
                 result_version_type, version_name = self._check_version_type(
                     command.url, checkout_version, command.retry
@@ -409,7 +411,10 @@ class GitClient(VcsClientBase):
 
             if not command.shallow or version_type in (None, 'branch'):
                 cmd_clone = [GitClient._executable, 'clone', command.url, '.']
-                if version_type == 'branch':
+                if command.blobless_clone:
+                    cmd_clone += ['--filter=blob:none', '--no-checkout']
+                    checkout_version = command.version
+                elif version_type == 'branch':
                     cmd_clone += ['-b', version_name]
                     checkout_version = None
                 else:
