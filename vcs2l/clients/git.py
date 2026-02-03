@@ -785,6 +785,94 @@ class GitClient(VcsClientBase):
         if GitClient._config_color_is_auto:
             cmd[1:1] = '-c', 'color.ui=always'
 
+    def export_repository(self, version, basepath):
+        """Export repository to a tar.gz file at the specified version."""
+        if not GitClient.is_repository(self.path):
+            return False
+
+        self._check_executable()
+        filepath = f'{basepath}.tar.gz'
+
+        cmd = [
+            GitClient._executable,
+            'archive',
+            '--format=tar.gz',
+            f'--output={filepath}',
+            version or 'HEAD',
+        ]
+        result = self._run_command(cmd)
+        return filepath if result['returncode'] == 0 else False
+
+    def checkout(self, url, version=None, verbose=False, shallow=False, timeout=None):
+        """Clone a git repository to the specified path and checkout a specific version."""
+        if url is None or url.strip() == '':
+            raise ValueError('Invalid empty url: "%s"' % url)
+
+        self._check_executable()
+
+        if os.path.exists(self.path):
+            if os.path.isdir(self.path):
+                # Check if directory is empty
+                if os.listdir(self.path):
+                    return False
+            else:
+                return False
+        else:
+            # Create parent directories
+            try:
+                os.makedirs(self.path, exist_ok=True)
+            except OSError:
+                return False
+
+        try:
+            cmd_clone = [GitClient._executable, 'clone']
+
+            if shallow:
+                cmd_clone.extend(['--depth', '1'])
+                if self.get_git_version() >= [1, 7, 10]:
+                    cmd_clone.append('--no-single-branch')
+
+            if version is None:
+                cmd_clone.append('--recursive')
+
+            cmd_clone.extend([url, '.'])
+
+            result_clone = self._run_command(cmd_clone)
+            if result_clone['returncode']:
+                return False
+
+            # Checkout specific version if provided
+            if version:
+                cmd_checkout = [GitClient._executable, 'checkout', version]
+                result_checkout = self._run_command(cmd_checkout)
+
+                if result_checkout['returncode']:
+                    # Try fetching all refs first
+                    cmd_fetch = [GitClient._executable, 'fetch', '--all', '--tags']
+                    result_fetch = self._run_command(cmd_fetch)
+                    if result_fetch['returncode'] == 0:
+                        result_checkout = self._run_command(cmd_checkout)
+
+                    if result_checkout['returncode']:
+                        return False
+
+                # Update submodules after version checkout
+                cmd_submodules = [
+                    GitClient._executable,
+                    'submodule',
+                    'update',
+                    '--init',
+                    '--recursive',
+                ]
+                result_submodules = self._run_command(cmd_submodules)
+                if result_submodules['returncode']:
+                    return False
+
+            return True
+
+        except Exception:
+            return False
+
     def _check_executable(self):
         assert GitClient._executable is not None, "Could not find 'git' executable"
 
@@ -799,6 +887,24 @@ class GitClient(VcsClientBase):
                 continue
             tuples.append((hash_, ref))
         return tuples
+
+    def _get_current_version(self):
+        """Get current HEAD SHA."""
+        cmd = [GitClient._executable, 'rev-parse', 'HEAD']
+        result = self._run_command(cmd)
+        return result['output'].strip() if result['returncode'] == 0 else None
+
+    def _get_version_sha(self, version):
+        """Get SHA for a given version."""
+        cmd = [GitClient._executable, 'rev-parse', version]
+        result = self._run_command(cmd)
+        return result['output'].strip() if result['returncode'] == 0 else None
+
+    def _has_no_local_changes(self):
+        """Check if there are no local changes."""
+        cmd = [GitClient._executable, 'diff', '--quiet']
+        result = self._run_command(cmd)
+        return result['returncode'] == 0
 
 
 if not GitClient._executable:
