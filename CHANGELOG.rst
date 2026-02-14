@@ -2,6 +2,24 @@
 Changelog for package vcs2l
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.7 (2026-02-14)
+------------------
+* Provide an import shim for 'vcstool' API compatibility (`#94 <https://github.com/ros-infrastructure/vcs2l/pull/94>`_)
+* 🛠️ Bump actions/checkout from 6.0.1 to 6.0.2 (`#96 <https://github.com/ros-infrastructure/vcs2l/pull/96>`_)
+* 🛠️ Bump actions/setup-python from 6.1.0 to 6.2.0 (`#95 <https://github.com/ros-infrastructure/vcs2l/pull/95>`_)
+* 🛠️ Bump actions/upload-artifact from 5.0.0 to 6.0.0 (`#93 <https://github.com/ros-infrastructure/vcs2l/pull/93>`_)
+* Fix detection of annotated git tags (`#74 <https://github.com/ros-infrastructure/vcs2l/pull/74>`_)
+* Change dependabot update frequency to monthly. (`#87 <https://github.com/ros-infrastructure/vcs2l/pull/87>`_)
+* 🛠️ Bump actions/checkout from 6.0.0 to 6.0.1 (`#89 <https://github.com/ros-infrastructure/vcs2l/pull/89>`_)
+* 🛠️ Bump actions/setup-python from 6.0.0 to 6.1.0 (`#86 <https://github.com/ros-infrastructure/vcs2l/pull/86>`_)
+* Upload release upon tagging with created assets. (`#78 <https://github.com/ros-infrastructure/vcs2l/pull/78>`_)
+* 🛠️ Bump actions/checkout from 5.0.1 to 6.0.0 (`#85 <https://github.com/ros-infrastructure/vcs2l/pull/85>`_)
+* 🛠️ Bump actions/checkout from 5.0.0 to 5.0.1 (`#84 <https://github.com/ros-infrastructure/vcs2l/pull/84>`_)
+* Fix path-to-URL conversion on Python 3.14+ (`#82 <https://github.com/ros-infrastructure/vcs2l/pull/82>`_)
+* Exclude 'test' package from top-level search (`#81 <https://github.com/ros-infrastructure/vcs2l/pull/81>`_)
+* 🛠️ Bump actions/upload-artifact from 4.6.2 to 5.0.0 (`#80 <https://github.com/ros-infrastructure/vcs2l/pull/80>`_)
+* Contributors: Scott K Logan, Leander Stephen D'Souza
+
 1.1.6 (2025-10-15)
 ------------------
 * Clarify Humble support on installation steps (`#76 <https://github.com/ros-infrastructure/vcs2l/pull/76>`_)
@@ -29,8 +47,7 @@ Changelog for package vcs2l
 * Added DCO instructions to contributing guidelines. (`#44 <https://github.com/ros-infrastructure/vcs2l/pull/44>`_)
 * 🛠️ Bump pypa/gh-action-pypi-publish from 1.12.4 to 1.13.0 (`#57 <https://github.com/ros-infrastructure/vcs2l/pull/57>`_)
 * 🛠️ Bump actions/setup-python from 5.6.0 to 6.0.0 (`#56 <https://github.com/ros-infrastructure/vcs2l/pull/56>`_)
-
-Contributors: Leander Stephen D'Souza, Scott K Logan
+* Contributors: Leander Stephen D'Souza, Scott K Logan
 
 1.1.4 (2025-08-28)
 ------------------
