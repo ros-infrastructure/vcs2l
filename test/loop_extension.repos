@@ -1,8 +1,0 @@
-# Repositories extension file that creates an extends a circular import on its base.
----
-extends: loop_base.repos
-repositories:
-  vcs2l:
-    type: git
-    url: https://github.com/ros-infrastructure/vcs2l.git
-    version: 1.1.3
