@@ -11,6 +11,11 @@ from vcs2l.commands.pull import main
 from vcs2l.util import rmtree
 
 from . import StagedReposFile, StagedReposFile2, to_file_url
+from .test_utils import (
+    assert_base_repos_imported,
+    assert_git_at_commit,
+    assert_git_at_tag,
+)
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -317,6 +322,63 @@ class TestCommands(StagedReposFile):
             self.assertFalse(os.path.exists(os.path.join(workdir, 'immutable/tag')))
             self.assertFalse(os.path.exists(os.path.join(workdir, 'vcs2l')))
             self.assertFalse(os.path.exists(os.path.join(workdir, 'without_version')))
+        finally:
+            rmtree(workdir)
+
+    def test_import_extends(self):
+        """Test import with extends functionality."""
+        workdir = os.path.join(TEST_WORKSPACE, 'import_extends')
+        os.makedirs(workdir)
+        try:
+            run_command(
+                'import',
+                ['--input', self.staged_extension_repos_path, '.'],
+                subfolder='import_extends',
+            )
+            # Verify base repos from staged.repos were imported
+            assert_base_repos_imported(workdir)
+
+            # Verify overridden repos are at the correct version (1.1.3)
+            assert_git_at_commit(
+                os.path.join(workdir, 'immutable', 'hash'),
+                self._tag_hashes['1.1.3'],
+            )
+            assert_git_at_tag(
+                os.path.join(workdir, 'immutable', 'tag'),
+                '1.1.3',
+            )
+        finally:
+            rmtree(workdir)
+
+    def test_import_extends_loop(self):
+        """Test import with extends functionality that creates a circular import."""
+        with self.assertRaises(subprocess.CalledProcessError) as e:
+            run_command('import', ['--input', self.loop_extension_repos_path, '.'])
+        self.assertIn(b'Circular import detected:', e.exception.output)
+
+    def test_import_multiple_extends(self):
+        """Test import with multiple extends functionality."""
+        workdir = os.path.join(TEST_WORKSPACE, 'import_multiple_extends')
+        os.makedirs(workdir)
+        try:
+            run_command(
+                'import',
+                ['--input', self.staged_multiple_extension_repos_path, '.'],
+                subfolder='import_multiple_extends',
+            )
+            assert_base_repos_imported(workdir)
+
+            # Verify the highest-priority extension overrides (1.1.4 from
+            # staged_extension_2.repos) for immutable/hash
+            assert_git_at_commit(
+                os.path.join(workdir, 'immutable', 'hash'),
+                self._tag_hashes['1.1.4'],
+            )
+            # Verify the top-level file overrides immutable/tag to 1.1.5
+            assert_git_at_tag(
+                os.path.join(workdir, 'immutable', 'tag'),
+                '1.1.5',
+            )
         finally:
             rmtree(workdir)
 
