@@ -11,27 +11,14 @@ from vcs2l.commands.pull import main
 from vcs2l.util import rmtree
 
 from . import StagedReposFile, StagedReposFile2, to_file_url
+from .test_utils import (
+    assert_base_repos_imported,
+    assert_git_at_commit,
+    assert_git_at_tag,
+)
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-<<<<<<< HEAD
-=======
-from vcs2l.clients.git import GitClient  # noqa: E402
-from vcs2l.util import rmtree  # noqa: E402
-
-file_uri_scheme = 'file://' if sys.platform != 'win32' else 'file:///'
-
-REPOS_FILE = os.path.join(os.path.dirname(__file__), 'list.repos')
-REPOS_FILE_URL = file_uri_scheme + REPOS_FILE
-REPOS2_FILE = os.path.join(os.path.dirname(__file__), 'list2.repos')
-REPOS_EXTENDS_FILE = os.path.join(os.path.dirname(__file__), 'list_extension.repos')
-REPOS_MULTIPLE_EXTENDS_FILE = os.path.join(
-    os.path.dirname(__file__), 'list_multiple_extension.repos'
-)
-REPOS_EXTENDS_LOOP_FILE = os.path.join(
-    os.path.dirname(__file__), 'loop_extension.repos'
-)
->>>>>>> b186be5 (Added support for inheritance in importing repository files.)
 BAD_REPOS_FILE = os.path.join(os.path.dirname(__file__), 'bad.repos')
 TEST_WORKSPACE = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'test_workspace'
@@ -288,24 +275,18 @@ class TestCommands(StagedReposFile):
         finally:
             rmtree(workdir)
 
-    def import_common(self, import_file, repos_file):
-        """Common test function for import operations
-
-        Args:
-            import_file: Assertion expected output file name (without .txt)
-            repos_file: path to the .repos file to use
-        """
-        workdir = os.path.join(TEST_WORKSPACE, import_file)
+    def test_import_url(self):
+        workdir = os.path.join(TEST_WORKSPACE, 'import-url')
         os.makedirs(workdir)
         try:
             output = run_command(
-                'import', ['--input', repos_file, '.'], subfolder=import_file
+                'import', ['--input', self.repos_file_url, '.'], subfolder='import-url'
             )
             # the actual output contains absolute paths
             output = output.replace(
                 b'repository in ' + workdir.encode() + b'/', b'repository in ./'
             )
-            expected = get_expected_output(import_file)
+            expected = get_expected_output('import')
             # newer git versions don't append ... after the commit hash
             assert output == expected or output == expected.replace(b'... ', b' ')
         finally:
@@ -344,23 +325,62 @@ class TestCommands(StagedReposFile):
         finally:
             rmtree(workdir)
 
-    def test_import_file_url(self):
-        """Test import from file URL."""
-        self.import_common('import', REPOS_FILE_URL)
-
     def test_import_extends(self):
         """Test import with extends functionality."""
-        self.import_common('import_extends', REPOS_EXTENDS_FILE)
+        workdir = os.path.join(TEST_WORKSPACE, 'import_extends')
+        os.makedirs(workdir)
+        try:
+            run_command(
+                'import',
+                ['--input', self.staged_extension_repos_path, '.'],
+                subfolder='import_extends',
+            )
+            # Verify base repos from staged.repos were imported
+            assert_base_repos_imported(workdir)
+
+            # Verify overridden repos are at the correct version (1.1.3)
+            assert_git_at_commit(
+                os.path.join(workdir, 'immutable', 'hash'),
+                self._tag_hashes['1.1.3'],
+            )
+            assert_git_at_tag(
+                os.path.join(workdir, 'immutable', 'tag'),
+                '1.1.3',
+            )
+        finally:
+            rmtree(workdir)
 
     def test_import_extends_loop(self):
         """Test import with extends functionality that creates a circular import."""
         with self.assertRaises(subprocess.CalledProcessError) as e:
-            run_command('import', ['--input', REPOS_EXTENDS_LOOP_FILE, '.'])
+            run_command('import', ['--input', self.loop_extension_repos_path, '.'])
         self.assertIn(b'Circular import detected:', e.exception.output)
 
     def test_import_multiple_extends(self):
         """Test import with multiple extends functionality."""
-        self.import_common('import_multiple_extends', REPOS_MULTIPLE_EXTENDS_FILE)
+        workdir = os.path.join(TEST_WORKSPACE, 'import_multiple_extends')
+        os.makedirs(workdir)
+        try:
+            run_command(
+                'import',
+                ['--input', self.staged_multiple_extension_repos_path, '.'],
+                subfolder='import_multiple_extends',
+            )
+            assert_base_repos_imported(workdir)
+
+            # Verify the highest-priority extension overrides (1.1.4 from
+            # staged_extension_2.repos) for immutable/hash
+            assert_git_at_commit(
+                os.path.join(workdir, 'immutable', 'hash'),
+                self._tag_hashes['1.1.4'],
+            )
+            # Verify the top-level file overrides immutable/tag to 1.1.5
+            assert_git_at_tag(
+                os.path.join(workdir, 'immutable', 'tag'),
+                '1.1.5',
+            )
+        finally:
+            rmtree(workdir)
 
     def test_validate(self):
         output = run_command('validate', ['--input', self.repos_file_path])

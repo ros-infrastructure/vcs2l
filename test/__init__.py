@@ -12,6 +12,8 @@ from tempfile import TemporaryDirectory
 
 import yaml
 
+from .repos_factory import generate_extends_repos
+
 
 def to_file_url(path):
     return Path(path).as_uri()
@@ -65,6 +67,13 @@ class StagedReposFile(unittest.TestCase):
             ('commit', '--quiet', '--allow-empty', '-m', '0.1.27'),
             ('tag', '0.1.27', '-m', '0.1.27'),
             ('commit', '--quiet', '--allow-empty', '-m', "codin' codin' codin'"),
+            # Additional commits and tags for extends testing
+            ('commit', '--quiet', '--allow-empty', '-m', '1.1.3'),
+            ('tag', '1.1.3', '-m', '1.1.3'),
+            ('commit', '--quiet', '--allow-empty', '-m', '1.1.4'),
+            ('tag', '1.1.4', '-m', '1.1.4'),
+            ('commit', '--quiet', '--allow-empty', '-m', '1.1.5'),
+            ('tag', '1.1.5', '-m', '1.1.5'),
         ):
             subprocess.check_call(
                 [
@@ -74,6 +83,20 @@ class StagedReposFile(unittest.TestCase):
                 cwd=gitrepo_path,
                 env=cls._git_env,
             )
+
+        # Capture commit hashes for the extends testing tags
+        cls._tag_hashes = {}
+        for tag in ('1.1.3', '1.1.4', '1.1.5'):
+            hash_val = (
+                subprocess.check_output(
+                    [cls._git, 'rev-parse', tag + '^{commit}'],
+                    cwd=gitrepo_path,
+                    env=cls._git_env,
+                )
+                .decode()
+                .strip()
+            )
+            cls._tag_hashes[tag] = hash_val
 
         # Create the archive stage
         archive_path = os.path.join(cls.temp_dir.name, 'archive_dir')
@@ -130,6 +153,20 @@ class StagedReposFile(unittest.TestCase):
         cls.repos_file_path = os.path.join(cls.temp_dir.name, 'staged.repos')
         with open(cls.repos_file_path, 'wb') as f:
             yaml.safe_dump({'repositories': repos}, f, encoding='utf-8')
+
+        # Generate extends repos files for inheritance testing.
+        # Extension files reference staged.repos directly as their base.
+        gitrepo_url = to_file_url(gitrepo_path)
+        extends_paths = generate_extends_repos(
+            cls.temp_dir.name, gitrepo_url, cls._tag_hashes
+        )
+        cls.staged_extension_repos_path = extends_paths['staged_extension']
+        cls.staged_extension_2_repos_path = extends_paths['staged_extension_2']
+        cls.staged_multiple_extension_repos_path = extends_paths[
+            'staged_multiple_extension'
+        ]
+        cls.loop_base_repos_path = extends_paths['loop_base']
+        cls.loop_extension_repos_path = extends_paths['loop_extension']
 
     @classmethod
     def tearDownClass(cls):
