@@ -140,7 +140,7 @@ class StagedReposFile(unittest.TestCase):
 
 
 class StagedReposFile2(unittest.TestCase):
-    """Fixture for testing subversion and mercurial clients."""
+    """Fixture for testing subversion, mercurial, and bazaar clients."""
 
     _svn = which('svn')
     _svnadmin = which('svnadmin')
@@ -149,6 +149,11 @@ class StagedReposFile2(unittest.TestCase):
         **os.environ,
         'HGUSER': 'vcs2l',
         'EMAIL': 'vcs2l@example.com',
+    }
+    _bzr = which('bzr')
+    _bzr_env = {
+        **os.environ,
+        'BZR_EMAIL': 'vcs2l <vcs2l@example.com>',
     }
     _commit_date = '2005-01-01T00:00:00-06:00'
 
@@ -163,6 +168,8 @@ class StagedReposFile2(unittest.TestCase):
             raise unittest.SkipTest('`svnadmin` was not found')
         if not cls._hg:
             raise unittest.SkipTest('`hg` was not found')
+        if not cls._bzr:
+            raise unittest.SkipTest('`bzr` was not found')
         try:
             # check if the svn executable is usable (on macOS)
             # and not only exists to state that the program is not installed
@@ -219,6 +226,29 @@ class StagedReposFile2(unittest.TestCase):
                 ],
                 cwd=hgrepo_path,
                 env=cls._hg_env,
+            )
+
+        # Create the staged bazaar repository
+        bzrrepo_path = os.path.join(cls.temp_dir.name, 'bzrrepo')
+        os.mkdir(bzrrepo_path)
+        shutil.copy(
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'LICENSE'),
+            bzrrepo_path,
+        )
+        for command in (
+            ('init', '.'),
+            ('add', 'LICENSE'),
+            ('commit', '-m', 'Initial commit'),
+        ):
+            subprocess.check_call(
+                [
+                    cls._bzr,
+                    *command,
+                ],
+                cwd=bzrrepo_path,
+                env=cls._bzr_env,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             )
 
         # Populate the staged.repos file

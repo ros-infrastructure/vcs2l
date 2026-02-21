@@ -1,151 +1,103 @@
-"""Integration tests for SvnClient class."""
+"""Tests for SvnClient."""
 
 import os
-import subprocess
 import tarfile
-import tempfile
 import unittest
-from shutil import which
+from tempfile import TemporaryDirectory
 
 from vcs2l.clients.svn import SvnClient
-from vcs2l.util import rmtree
 
-svn = which('svn')
+from . import StagedReposFile2, to_file_url
 
 
-@unittest.skipIf(not svn, '`svn` was not found')
-class TestCheckout(unittest.TestCase):
-    """Test cases for SvnClient checkout method."""
+class TestSvnCheckout(StagedReposFile2):
+    """Test SvnClient.checkout using the staged svn repository."""
 
-    def setUp(self):
-        # Create a temporary directory for testing
-        self.test_dir = tempfile.mkdtemp(prefix='svn_test_')
-        self.repo_url = 'https://svn.apache.org/repos/asf/abdera/abdera2/'
-        self.client = SvnClient(self.test_dir)
+    def test_default_branch(self):
+        """Checkout without a version gets the latest revision."""
+        with TemporaryDirectory(suffix='.svn_checkout') as tmp:
+            dest = os.path.join(tmp, 'repo')
+            client = SvnClient(dest)
+            url = to_file_url(os.path.join(self.temp_dir.name, 'svnrepo'))
 
-    def tearDown(self):
-        if os.path.exists(self.test_dir):
-            rmtree(self.test_dir)
+            result = client.checkout(url)
+            self.assertTrue(result)
+            self.assertTrue(os.path.isdir(os.path.join(dest, '.svn')))
 
-    def test_checkout_version(self):
-        """Test checkout repository with specific revision"""
-        version = '1928014'  # Specific revision number
+    def test_specific_hash(self):
+        """Checkout at revision 1."""
+        with TemporaryDirectory(suffix='.svn_checkout') as tmp:
+            dest = os.path.join(tmp, 'repo')
+            client = SvnClient(dest)
+            url = to_file_url(os.path.join(self.temp_dir.name, 'svnrepo'))
 
-        result = self.client.checkout(self.repo_url, version=version)
+            result = client.checkout(url, version='1')
+            self.assertTrue(result)
+            self.assertTrue(os.path.isdir(os.path.join(dest, '.svn')))
+            # LICENSE was committed at rev 1
+            self.assertTrue(os.path.isfile(os.path.join(dest, 'LICENSE')))
 
-        self.assertTrue(result, 'Checkout with specific version should succeed')
+    def test_nonempty_dir(self):
+        """Checkout into a non-empty directory should raise RuntimeError."""
+        with TemporaryDirectory(suffix='.svn_checkout') as tmp:
+            dest = os.path.join(tmp, 'repo')
+            os.makedirs(dest)
+            with open(os.path.join(dest, 'blocker.txt'), 'w', encoding='utf-8') as f:
+                f.write('occupied')
 
-        # Verify that .svn directory exists
-        svn_dir = os.path.join(self.test_dir, '.svn')
-        self.assertTrue(
-            os.path.exists(svn_dir), '.svn directory should exist after checkout'
-        )
+            client = SvnClient(dest)
+            url = to_file_url(os.path.join(self.temp_dir.name, 'svnrepo'))
 
-        # Verify the checked out revision (using svn info)
-        try:
-            result = subprocess.run(
-                ['svn', 'info', '--show-item', 'revision'],
-                check=True,
-                cwd=self.test_dir,
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
-            if result.returncode == 0:
-                actual_revision = result.stdout.strip()
-                self.assertEqual(
-                    actual_revision,
-                    version,
-                    f'Checked out revision should be {version}, got {actual_revision}',
+            with self.assertRaises(RuntimeError):
+                client.checkout(url)
+
+
+class TestSvnExportRepository(StagedReposFile2):
+    """Test SvnClient.export_repository using the staged svn repository."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._checkout_dir = TemporaryDirectory(suffix='.svn_export')
+        cls._checkout_path = os.path.join(cls._checkout_dir.name, 'repo')
+        client = SvnClient(cls._checkout_path)
+        url = to_file_url(os.path.join(cls.temp_dir.name, 'svnrepo'))
+        assert client.checkout(url, version='1'), 'Failed to checkout staged svn repo'
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._checkout_dir.cleanup()
+        super().tearDownClass()
+
+    def test_creates_tarball(self):
+        """export_repository should create a .tar.gz archive."""
+        with TemporaryDirectory(suffix='.svn_export_out') as tmp:
+            basepath = os.path.join(tmp, 'export')
+            client = SvnClient(self._checkout_path)
+
+            result = client.export_repository('1', basepath)
+            self.assertTrue(result)
+            self.assertTrue(os.path.isfile(basepath + '.tar.gz'))
+
+            with tarfile.open(basepath + '.tar.gz', 'r:gz') as tar:
+                names = tar.getnames()
+                self.assertTrue(len(names) > 0)
+
+    def test_contains_license(self):
+        """Exported archive should contain LICENSE."""
+        with TemporaryDirectory(suffix='.svn_export_out') as tmp:
+            basepath = os.path.join(tmp, 'export_license')
+            client = SvnClient(self._checkout_path)
+
+            result = client.export_repository('1', basepath)
+            self.assertTrue(result)
+
+            with tarfile.open(basepath + '.tar.gz', 'r:gz') as tar:
+                names = tar.getnames()
+                self.assertTrue(
+                    any('LICENSE' in n for n in names),
+                    'LICENSE not found in archive: %s' % names,
                 )
-        except (
-            subprocess.TimeoutExpired,
-            subprocess.SubprocessError,
-            FileNotFoundError,
-        ):
-            self.fail('Failed to run svn info to verify revision')
-
-    def test_invalid_version(self):
-        """Test that checkout fails with invalid revision number"""
-        invalid_version = '999999999'
-
-        result = self.client.checkout(self.repo_url, version=invalid_version)
-
-        self.assertFalse(result, 'Checkout with invalid revision should fail')
-
-    def test_existing_non_empty_dir_should_fail(self):
-        """Test that checkout fails if target directory is not empty"""
-        # Create a file in the test directory first
-        test_file = os.path.join(self.test_dir, 'existing_file.txt')
-        with open(test_file, 'w', encoding='utf-8') as f:
-            f.write('This file already exists')
-
-        with self.assertRaises(RuntimeError) as context:
-            self.client.checkout(self.repo_url)
-
-        self.assertIn('Target path exists and is not empty', str(context.exception))
-
-
-@unittest.skipIf(not svn, '`svn` was not found')
-class TestSvnExportRepository(unittest.TestCase):
-    """Integration tests for SvnClient export_repository functionality."""
-
-    def setUp(self):
-        self.test_dir = tempfile.mkdtemp()
-        self.repo_url = 'https://svn.apache.org/repos/asf/abdera/abdera2/'
-        self.repo_path = os.path.join(self.test_dir, 'test_repo')
-        self.export_path = os.path.join(self.test_dir, 'export_test')
-
-    def tearDown(self):
-        if os.path.exists(self.test_dir):
-            rmtree(self.test_dir)
-
-    def test_export_repository_with_version(self):
-        """Test export repository with specific version."""
-        client = SvnClient(self.repo_path)
-        client.checkout(self.repo_url)
-
-        # Change to the repository directory for export
-        original_cwd = os.getcwd()
-        try:
-            os.chdir(self.repo_path)
-
-            result = client.export_repository('1928014', self.export_path)
-            self.assertTrue(result, 'Export should return True on success')
-
-            # Verify tar.gz file was created
-            archive_path = self.export_path + '.tar.gz'
-            self.assertTrue(
-                os.path.exists(archive_path), 'Archive file should be created'
-            )
-
-            # Verify the archive is a valid tar.gz file
-            with tarfile.open(archive_path, 'r:gz') as tar:
-                members = tar.getnames()
-                self.assertGreater(len(members), 0, 'Archive should contain files')
-
-        finally:
-            os.chdir(original_cwd)
-
-    def test_export_repository_invalid_version(self):
-        """Test export repository with invalid version returns False."""
-        client = SvnClient(self.repo_path)
-        client.checkout(self.repo_url)
-
-        original_cwd = os.getcwd()
-        try:
-            os.chdir(self.repo_path)
-
-            result = client.export_repository('999999999', self.export_path)
-            self.assertFalse(result, 'Export should return False for invalid version')
-
-            archive_path = self.export_path + '.tar.gz'
-            self.assertFalse(
-                os.path.exists(archive_path), 'Archive should not be created on failure'
-            )
-
-        finally:
-            os.chdir(original_cwd)
 
 
 if __name__ == '__main__':

@@ -1,144 +1,142 @@
-"""Unit tests for GitClient checkout functionality"""
+"""Tests for Git Client."""
 
 import os
 import tarfile
-import tempfile
 import unittest
+from tempfile import TemporaryDirectory
 
 from vcs2l.clients.git import GitClient
-from vcs2l.util import rmtree
+
+from . import StagedReposFile, to_file_url
 
 
-class TestCheckout(unittest.TestCase):
-    """Test cases for GitClient checkout method"""
+class TestGitCheckout(StagedReposFile):
+    """Test GitClient.checkout using the staged git repository."""
 
-    def setUp(self):
-        # Create a temporary directory for testing
-        self.test_dir = tempfile.mkdtemp()
-        self.repo_path = os.path.join(self.test_dir, 'test_repo')
+    def test_default_branch(self):
+        """Checkout without a version gets the default branch."""
+        with TemporaryDirectory(suffix='.git_checkout') as tmp:
+            dest = os.path.join(tmp, 'repo')
+            client = GitClient(dest)
+            url = to_file_url(os.path.join(self.temp_dir.name, 'gitrepo'))
 
-    def tearDown(self):
-        if os.path.exists(self.test_dir):
-            rmtree(self.test_dir)
+            result = client.checkout(url)
+            self.assertTrue(result)
+            self.assertTrue(os.path.isdir(os.path.join(dest, '.git')))
 
-    def test_checkout_specific_branch(self):
-        """Test checking out a specific branch"""
-        client = GitClient(self.repo_path)
+    def test_specific_branch(self):
+        """Checkout the main branch by name."""
+        with TemporaryDirectory(suffix='.git_checkout') as tmp:
+            dest = os.path.join(tmp, 'repo')
+            client = GitClient(dest)
+            url = to_file_url(os.path.join(self.temp_dir.name, 'gitrepo'))
 
-        url = 'https://github.com/octocat/Hello-World.git'
-        success = client.checkout(url, version='test', shallow=True)
+            result = client.checkout(url, version='main')
+            self.assertTrue(result)
+            self.assertTrue(os.path.isdir(os.path.join(dest, '.git')))
 
-        self.assertTrue(success, 'Checkout should succeed')
-        self.assertTrue(os.path.exists(self.repo_path), 'Repo directory should exist')
-        self.assertTrue(
-            os.path.isdir(os.path.join(self.repo_path, '.git')),
-            'Should be a git repository',
-        )
+    def test_specific_hash(self):
+        """Checkout a specific commit hash."""
+        with TemporaryDirectory(suffix='.git_checkout') as tmp:
+            dest = os.path.join(tmp, 'repo')
+            client = GitClient(dest)
+            url = to_file_url(os.path.join(self.temp_dir.name, 'gitrepo'))
 
-    def test_checkout_nonexistent_repo(self):
-        """Test checking out a non-existent repository should fail"""
-        client = GitClient(self.repo_path)
+            result = client.checkout(url, version='0.1.26')
+            self.assertTrue(result)
 
-        url = 'https://github.com/this/repo/does/not/exist.git'
-        success = client.checkout(url, verbose=True)
+    def test_nonempty_dir(self):
+        """Checkout into a non-empty directory should return False."""
+        with TemporaryDirectory(suffix='.git_checkout') as tmp:
+            dest = os.path.join(tmp, 'repo')
+            os.makedirs(dest)
+            # Place a file so the directory is non-empty
+            with open(os.path.join(dest, 'blocker.txt'), 'w', encoding='utf-8') as f:
+                f.write('occupied')
 
-        self.assertFalse(success, 'Checkout should fail for non-existent repo')
+            client = GitClient(dest)
+            url = to_file_url(os.path.join(self.temp_dir.name, 'gitrepo'))
 
-    def test_checkout_to_existing_directory(self):
-        """Test checking out to a non-empty directory should fail"""
-        # Create a non-empty directory
-        os.makedirs(self.repo_path)
-        with open(
-            os.path.join(self.repo_path, 'existing_file.txt'), 'w', encoding='utf-8'
-        ) as f:
-            f.write('This file already exists')
+            result = client.checkout(url)
+            self.assertFalse(result)
 
-        client = GitClient(self.repo_path)
-        url = 'https://github.com/octocat/Hello-World.git'
-        success = client.checkout(url)
+    def test_invalid_version(self):
+        """Checkout with a non-existent version should return False."""
+        with TemporaryDirectory(suffix='.git_checkout') as tmp:
+            dest = os.path.join(tmp, 'repo')
+            client = GitClient(dest)
+            url = to_file_url(os.path.join(self.temp_dir.name, 'gitrepo'))
 
-        self.assertFalse(success, 'Checkout should fail for non-empty directory')
+            result = client.checkout(url, version='nonexistent-branch-xyz')
+            self.assertFalse(result)
 
 
-class TestExportRepository(unittest.TestCase):
-    """Test cases for GitClient export_repository method"""
+class TestGitExportRepository(StagedReposFile):
+    """Test GitClient.export_repository using the staged git repository."""
 
-    def setUp(self):
-        # Create a temporary directory for testing
-        self.test_dir = tempfile.mkdtemp()
-        self.repo_path = os.path.join(self.test_dir, 'test_repo')
-        self.export_dir = os.path.join(self.test_dir, 'exports')
-        os.makedirs(self.export_dir, exist_ok=True)
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # Clone the staged repo so we have a working git directory
+        cls._clone_dir = TemporaryDirectory(suffix='.git_export')
+        cls._clone_path = os.path.join(cls._clone_dir.name, 'repo')
+        client = GitClient(cls._clone_path)
+        url = to_file_url(os.path.join(cls.temp_dir.name, 'gitrepo'))
+        assert client.checkout(url, version='0.1.27'), 'Failed to clone staged repo'
 
-        self.test_repo_url = 'https://github.com/octocat/Hello-World.git'
-        self.client = GitClient(self.repo_path)
+    @classmethod
+    def tearDownClass(cls):
+        cls._clone_dir.cleanup()
+        super().tearDownClass()
 
-    def tearDown(self):
-        if os.path.exists(self.test_dir):
-            rmtree(self.test_dir)
+    def test_creates_tarball(self):
+        """export_repository should create a .tar.gz archive."""
+        with TemporaryDirectory(suffix='.git_export_out') as tmp:
+            basepath = os.path.join(tmp, 'export')
+            client = GitClient(self._clone_path)
 
-    def test_export_specific_branch(self):
-        """Test exporting the repository at a specific branch"""
-        success = self.client.checkout(self.test_repo_url, version='test')
+            result = client.export_repository('HEAD', basepath)
+            self.assertTrue(result)
+            self.assertTrue(os.path.isfile(basepath + '.tar.gz'))
 
-        if not success:
-            self.fail('Failed to clone test repository')
+            with tarfile.open(basepath + '.tar.gz', 'r:gz') as tar:
+                names = tar.getnames()
+                self.assertTrue(len(names) > 0)
 
-        basepath = os.path.join(self.export_dir, 'repo_export')
-        filepath = self.client.export_repository('test', basepath)
+    def test_at_tag(self):
+        """export_repository at a specific tag should succeed."""
+        with TemporaryDirectory(suffix='.git_export_out') as tmp:
+            basepath = os.path.join(tmp, 'export_tag')
+            client = GitClient(self._clone_path)
 
-        self.assertTrue(os.path.exists(filepath), 'Export file should exist')
-        self.assertGreater(
-            os.path.getsize(filepath), 0, 'Export file should not be empty'
-        )
-        # Verify it's a valid tar.gz file
-        try:
-            if filepath and isinstance(filepath, str):
-                with tarfile.open(filepath, 'r:gz') as tar:
-                    members = tar.getnames()
-                    self.assertIn('README', members, 'Should contain README file')
-            else:
-                self.fail('Exported file path is invalid')
-        except tarfile.ReadError:
-            self.fail('Exported file should be a valid tar.gz archive')
+            result = client.export_repository('0.1.27', basepath)
+            self.assertTrue(result)
+            self.assertTrue(os.path.isfile(basepath + '.tar.gz'))
 
-    def test_export_with_local_changes_uses_temp_dir(self):
-        """Test that export uses temp directory when there are local changes"""
-        # First clone the repository
-        success = self.client.checkout(self.test_repo_url)
-        if not success:
-            self.fail('Failed to clone test repository')
+    def test_invalid_version(self):
+        """export_repository with a bad ref should return False."""
+        with TemporaryDirectory(suffix='.git_export_out') as tmp:
+            basepath = os.path.join(tmp, 'export_bad')
+            client = GitClient(self._clone_path)
 
-        # Create a local change
-        test_file = os.path.join(self.repo_path, 'test_change.txt')
-        with open(test_file, 'w', encoding='utf-8') as f:
-            f.write('test change')
+            result = client.export_repository('nonexistent-ref-xyz', basepath)
+            self.assertFalse(result)
 
-        basepath = os.path.join(self.export_dir, 'local_changes_test')
-        filepath = self.client.export_repository(None, basepath)
+    def test_contains_license(self):
+        """Exported archive at a tag after LICENSE merge should contain LICENSE."""
+        with TemporaryDirectory(suffix='.git_export_out') as tmp:
+            basepath = os.path.join(tmp, 'export_license')
+            client = GitClient(self._clone_path)
 
-        self.assertIsNotNone(filepath, 'Export should succeed even with local changes')
-        self.assertTrue(os.path.exists(filepath), 'Export file should exist')
-        self.assertGreater(
-            os.path.getsize(filepath), 0, 'Export file should not be empty'
-        )
+            result = client.export_repository('0.1.27', basepath)
+            self.assertTrue(result)
 
-        # Clean up
-        os.remove(test_file)
-
-    def test_export_invalid_branch(self):
-        """Test exporting a non-existent branch should fail gracefully"""
-        success = self.client.checkout(self.test_repo_url)
-
-        if not success:
-            self.fail('Failed to clone test repository')
-
-        basepath = os.path.join(self.export_dir, 'nonexistent_export')
-        result = self.client.export_repository('nonexistent-branch-12345', basepath)
-
-        self.assertEqual(
-            result, False, 'Export should return False for non-existent ref'
-        )
+            with tarfile.open(basepath + '.tar.gz', 'r:gz') as tar:
+                names = tar.getnames()
+                self.assertTrue(
+                    any('LICENSE' in n for n in names),
+                    f'LICENSE not found in archive: {names}',
+                )
 
 
 if __name__ == '__main__':

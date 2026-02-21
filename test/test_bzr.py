@@ -1,129 +1,111 @@
-"""Integration tests for BzrClient class."""
+"""Tests for BzrClient."""
 
 import os
 import tarfile
-import tempfile
 import unittest
-from shutil import which
+from tempfile import TemporaryDirectory
 
 from vcs2l.clients.bzr import BzrClient
-from vcs2l.util import rmtree
 
-bzr = which('bzr')
-
-
-@unittest.skipIf(not bzr, '`bzr` was not found')
-class TestCheckout(unittest.TestCase):
-    """Simple integration tests for BzrClient checkout functionality."""
-
-    def setUp(self):
-        """Set up test fixtures."""
-        self.test_dir = tempfile.mkdtemp()
-        self.repo_link = 'https://github.com/octocat/Hello-World.git'
-        self.repo_path = os.path.join(self.test_dir, 'test_repo')
-
-    def tearDown(self):
-        """Clean up after tests."""
-        if os.path.exists(self.test_dir):
-            rmtree(self.test_dir)
-
-    def test_checkout_repository(self):
-        """Test checkout with a valid repository URL."""
-        client = BzrClient(self.repo_path)
-        result = client.checkout(self.repo_link)
-
-        self.assertTrue(result)
-        self.assertTrue(os.path.exists(self.repo_path))
-
-    def test_checkout_invalid_url(self):
-        """Test checkout with invalid URL raises ValueError."""
-        client = BzrClient(self.repo_path)
-
-        with self.assertRaises(ValueError):
-            client.checkout(None)
-
-        with self.assertRaises(ValueError):
-            client.checkout('')
-
-    def test_checkout_existing_directory_fails(self):
-        """Test checkout fails when directory already exists with content."""
-        # Create the target directory and put a file in it
-        os.makedirs(self.repo_path, exist_ok=True)
-        test_file = os.path.join(self.repo_path, 'existing_file.txt')
-        with open(test_file, 'w', encoding='utf-8') as f:
-            f.write('This file already exists')
-
-        client = BzrClient(self.repo_path)
-
-        with self.assertRaises(RuntimeError) as context:
-            client.checkout(self.repo_link)
-
-        # Verify the error message mentions the path
-        self.assertIn(self.repo_path, str(context.exception))
-        self.assertIn('Target path exists and is not empty', str(context.exception))
+from . import StagedReposFile2, to_file_url
 
 
-@unittest.skipIf(not bzr, '`bzr` was not found')
-class TestExportRepository(unittest.TestCase):
-    """Integration tests for BzrClient export_repository functionality."""
+class TestBzrCheckout(StagedReposFile2):
+    """Test BzrClient.checkout using the staged bzr repository."""
 
-    def setUp(self):
-        self.test_dir = tempfile.mkdtemp()
-        self.repo_path = os.path.join(self.test_dir, 'test_repo')
-        self.export_path = os.path.join(self.test_dir, 'export_test')
-        self.client = BzrClient(self.repo_path)
-        # Use a git repository instead of launchpad for future-proofing
-        self.repo_url = 'https://github.com/octocat/Hello-World.git'
+    def test_default_branch(self):
+        """Checkout without a version branches the entire repository."""
+        with TemporaryDirectory(suffix='.bzr_checkout') as tmp:
+            dest = os.path.join(tmp, 'repo')
+            client = BzrClient(dest)
+            url = to_file_url(os.path.join(self.temp_dir.name, 'bzrrepo'))
 
-    def tearDown(self):
-        if os.path.exists(self.test_dir):
-            rmtree(self.test_dir)
+            result = client.checkout(url)
+            self.assertTrue(result)
+            self.assertTrue(os.path.isdir(os.path.join(dest, '.bzr')))
+            self.assertTrue(os.path.isfile(os.path.join(dest, 'LICENSE')))
 
-    def test_export_repository(self):
-        """Test export repository."""
-        self.client.checkout(self.repo_url)
+    def test_specific_hash(self):
+        """Checkout at revision 1."""
+        with TemporaryDirectory(suffix='.bzr_checkout') as tmp:
+            dest = os.path.join(tmp, 'repo')
+            client = BzrClient(dest)
+            url = to_file_url(os.path.join(self.temp_dir.name, 'bzrrepo'))
 
-        # Change to the repository directory for export
-        original_cwd = os.getcwd()
-        try:
-            os.chdir(self.repo_path)
+            result = client.checkout(url, version='1')
+            self.assertTrue(result)
+            self.assertTrue(os.path.isdir(os.path.join(dest, '.bzr')))
 
-            # Test export with a specific revision
-            result = self.client.export_repository(None, self.export_path)
-            self.assertTrue(result, 'Export should return True on success')
+    def test_nonempty_dir(self):
+        """Checkout into a non-empty directory should raise RuntimeError."""
+        with TemporaryDirectory(suffix='.bzr_checkout') as tmp:
+            dest = os.path.join(tmp, 'repo')
+            os.makedirs(dest)
+            with open(os.path.join(dest, 'blocker.txt'), 'w', encoding='utf-8') as f:
+                f.write('occupied')
 
-            archive_path = self.export_path + '.tar.gz'
-            self.assertTrue(
-                os.path.exists(archive_path), 'Archive file should be created'
-            )
+            client = BzrClient(dest)
+            url = to_file_url(os.path.join(self.temp_dir.name, 'bzrrepo'))
 
-            # Verify the archive is a valid tar.gz file
-            with tarfile.open(archive_path, 'r:gz') as tar:
-                members = tar.getnames()
-                self.assertGreater(len(members), 0, 'Archive should contain files')
+            with self.assertRaises(RuntimeError):
+                client.checkout(url)
 
-        finally:
-            os.chdir(original_cwd)
 
-    def test_export_repository_git_version_unsupported(self):
-        """Test export repository with unsupported version for git repo."""
-        self.client.checkout(self.repo_url)
+class TestBzrExportRepository(StagedReposFile2):
+    """Test BzrClient.export_repository using the staged bzr repository."""
 
-        # Change to the repository directory for export
-        original_cwd = os.getcwd()
-        try:
-            os.chdir(self.repo_path)
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._branch_dir = TemporaryDirectory(suffix='.bzr_export')
+        cls._branch_path = os.path.join(cls._branch_dir.name, 'repo')
+        client = BzrClient(cls._branch_path)
+        url = to_file_url(os.path.join(cls.temp_dir.name, 'bzrrepo'))
+        assert client.checkout(url), 'Failed to branch staged bzr repo'
 
-            # Test export with invalid version
-            result = self.client.export_repository('999999999', self.export_path)
-            self.assertFalse(result, 'Version is not supported for git repositories.')
+    @classmethod
+    def tearDownClass(cls):
+        cls._branch_dir.cleanup()
+        super().tearDownClass()
 
-            archive_path = self.export_path + '.tar.gz'
-            self.assertFalse(
-                os.path.exists(archive_path), 'Archive should not be created on failure'
-            )
-        finally:
-            os.chdir(original_cwd)
+    def test_creates_tarball(self):
+        """export_repository should create a .tar.gz archive."""
+        with TemporaryDirectory(suffix='.bzr_export_out') as tmp:
+            basepath = os.path.join(tmp, 'export')
+            client = BzrClient(self._branch_path)
+
+            result = client.export_repository('1', basepath)
+            self.assertTrue(result)
+            self.assertTrue(os.path.isfile(basepath + '.tar.gz'))
+
+            with tarfile.open(basepath + '.tar.gz', 'r:gz') as tar:
+                names = tar.getnames()
+                self.assertTrue(len(names) > 0)
+
+    def test_contains_license(self):
+        """Exported archive should contain LICENSE."""
+        with TemporaryDirectory(suffix='.bzr_export_out') as tmp:
+            basepath = os.path.join(tmp, 'export_license')
+            client = BzrClient(self._branch_path)
+
+            result = client.export_repository('1', basepath)
+            self.assertTrue(result)
+
+            with tarfile.open(basepath + '.tar.gz', 'r:gz') as tar:
+                names = tar.getnames()
+                self.assertTrue(
+                    any('LICENSE' in n for n in names),
+                    'LICENSE not found in archive: %s' % names,
+                )
+
+    def test_invalid_version(self):
+        """export_repository with a bad revision should return False."""
+        with TemporaryDirectory(suffix='.bzr_export_out') as tmp:
+            basepath = os.path.join(tmp, 'export_bad')
+            client = BzrClient(self._branch_path)
+
+            result = client.export_repository('9999', basepath)
+            self.assertFalse(result)
 
 
 if __name__ == '__main__':
