@@ -312,13 +312,6 @@ class TestCommands(StagedReposFile):
     def test_import_blobless_shallow_mutually_exclusive(self):
         repo_root = os.path.dirname(os.path.dirname(__file__))
         script = os.path.join(repo_root, 'scripts', 'vcs-import')
-        env = dict(os.environ)
-        env.update(
-            GIT_CONFIG_GLOBAL=os.path.join(repo_root, 'test', '.gitconfig'),
-            LANG='en_US.UTF-8',
-            PYTHONPATH=repo_root + os.pathsep + env.get('PYTHONPATH', ''),
-            PYTHONWARNINGS='ignore',
-        )
         try:
             subprocess.check_output(
                 [
@@ -332,7 +325,6 @@ class TestCommands(StagedReposFile):
                 ],
                 stderr=subprocess.STDOUT,
                 cwd=TEST_WORKSPACE,
-                env=env,
             )
         except subprocess.CalledProcessError as e:
             output = adapt_command_output(e.output, TEST_WORKSPACE)
