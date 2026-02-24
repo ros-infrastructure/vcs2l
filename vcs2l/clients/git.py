@@ -412,8 +412,14 @@ class GitClient(VcsClientBase):
             if not command.shallow or version_type in (None, 'branch'):
                 cmd_clone = [GitClient._executable, 'clone', command.url, '.']
                 if command.blobless_clone:
-                    cmd_clone += ['--filter=blob:none', '--no-checkout']
-                    checkout_version = command.version
+                    cmd_clone += ['--filter=blob:none']
+                    if version_type == 'branch':
+                        cmd_clone += ['-b', version_name]
+                    elif command.version:
+                        cmd_clone.append('--no-checkout')
+                        checkout_version = command.version
+                    else:
+                        checkout_version = None
                 elif version_type == 'branch':
                     cmd_clone += ['-b', version_name]
                     checkout_version = None
