@@ -415,6 +415,7 @@ class GitClient(VcsClientBase):
                     cmd_clone += ['--filter=blob:none']
                     if version_type == 'branch':
                         cmd_clone += ['-b', version_name]
+                        checkout_version = None
                     elif command.version:
                         cmd_clone.append('--no-checkout')
                         checkout_version = command.version

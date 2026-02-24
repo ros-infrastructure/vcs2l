@@ -270,6 +270,78 @@ class TestCommands(StagedReposFile):
         finally:
             rmtree(workdir)
 
+    def test_import_blobless(self):
+        workdir = os.path.join(TEST_WORKSPACE, 'import-blobless')
+        os.makedirs(workdir)
+        try:
+            output = run_command(
+                'import',
+                ['--blobless-clone', '--input', self.repos_file_path, '.'],
+                subfolder='import-blobless',
+            )
+            # the actual output contains absolute paths
+            output = output.replace(
+                b'repository in ' + workdir.encode() + b'/', b'repository in ./'
+            )
+            expected = get_expected_output('import_blobless')
+            # newer git versions don't append ... after the commit hash
+            assert output == expected or output == expected.replace(b'... ', b' ')
+
+            git_repos = [
+                os.path.join(workdir, 'immutable', 'hash'),
+                os.path.join(workdir, 'immutable', 'tag'),
+                os.path.join(workdir, 'vcs2l'),
+                os.path.join(workdir, 'without_version'),
+            ]
+            for repo_path in git_repos:
+                partial_filter = subprocess.check_output(
+                    ['git', 'config', '--get', 'remote.origin.partialclonefilter'],
+                    stderr=subprocess.STDOUT,
+                    cwd=repo_path,
+                ).strip()
+                self.assertEqual(partial_filter, b'blob:none')
+                promisor = subprocess.check_output(
+                    ['git', 'config', '--get', 'remote.origin.promisor'],
+                    stderr=subprocess.STDOUT,
+                    cwd=repo_path,
+                ).strip()
+                self.assertEqual(promisor, b'true')
+        finally:
+            rmtree(workdir)
+
+    def test_import_blobless_shallow_mutually_exclusive(self):
+        repo_root = os.path.dirname(os.path.dirname(__file__))
+        script = os.path.join(repo_root, 'scripts', 'vcs-import')
+        env = dict(os.environ)
+        env.update(
+            GIT_CONFIG_GLOBAL=os.path.join(repo_root, 'test', '.gitconfig'),
+            LANG='en_US.UTF-8',
+            PYTHONPATH=repo_root + os.pathsep + env.get('PYTHONPATH', ''),
+            PYTHONWARNINGS='ignore',
+        )
+        try:
+            subprocess.check_output(
+                [
+                    sys.executable,
+                    script,
+                    '--shallow',
+                    '--blobless-clone',
+                    '--input',
+                    self.repos_file_path,
+                    '.',
+                ],
+                stderr=subprocess.STDOUT,
+                cwd=TEST_WORKSPACE,
+                env=env,
+            )
+        except subprocess.CalledProcessError as e:
+            output = adapt_command_output(e.output, TEST_WORKSPACE)
+        else:
+            self.fail("Expected '--shallow' and '--blobless-clone' to be rejected")
+
+        expected = get_expected_output('import_blobless_shallow_mutually_exclusive')
+        self.assertEqual(output, expected)
+
     def test_import_url(self):
         workdir = os.path.join(TEST_WORKSPACE, 'import-url')
         os.makedirs(workdir)

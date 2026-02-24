@@ -1,0 +1,53 @@
+......
+=== ./immutable/hash (git) ===
+Cloning into '.'...
+warning: filtering not recognized by server, ignoring
+Note: switching to '5b3504594f7354121cf024dc734bf79e270cffd3'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 5b35045... update changelog
+=== ./immutable/hash_tar (tar) ===
+Downloaded tarball from 'file:///vcstmp/archive.tar.gz' and unpacked it
+=== ./immutable/hash_zip (zip) ===
+Downloaded zipfile from 'file:///vcstmp/archive.zip' and unpacked it
+=== ./immutable/tag (git) ===
+Cloning into '.'...
+warning: filtering not recognized by server, ignoring
+Note: switching to 'tags/0.1.27'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 8087b72... 0.1.27
+=== ./vcs2l (git) ===
+Cloning into '.'...
+warning: filtering not recognized by server, ignoring
+=== ./without_version (git) ===
+Cloning into '.'...
+warning: filtering not recognized by server, ignoring
