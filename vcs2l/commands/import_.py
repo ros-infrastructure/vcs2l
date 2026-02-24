@@ -19,7 +19,15 @@ class ImportCommand(Command):
     command = 'import'
     help = 'Import the list of repositories'
 
-    def __init__(self, args, url, version=None, recursive=False, shallow=False):
+    def __init__(
+        self,
+        args,
+        url,
+        version=None,
+        recursive=False,
+        shallow=False,
+        blobless_clone=False,
+    ):
         super(ImportCommand, self).__init__(args)
         self.url = url
         self.version = version
@@ -28,7 +36,7 @@ class ImportCommand(Command):
         self.skip_existing = args.skip_existing
         self.recursive = recursive
         self.shallow = shallow
-        self.blobless_clone = args.blobless_clone
+        self.blobless_clone = blobless_clone
 
 
 def get_parser():
@@ -214,6 +222,7 @@ def generate_jobs(repos, args):
             str(repo['version']) if 'version' in repo else None,
             recursive=args.recursive,
             shallow=args.shallow,
+            blobless_clone=args.blobless_clone,
         )
         job = {'client': client, 'command': command}
         jobs.append(job)
