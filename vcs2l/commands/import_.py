@@ -263,6 +263,16 @@ def main(args=None, stdout=None, stderr=None):
     except (RuntimeError, request.URLError) as e:
         print(ansi('redf') + str(e) + ansi('reset'), file=sys.stderr)
         return 1
+
+    # check if both '--shallow' and '--blobless-clone' options are used, since they are mutually exclusive
+    if args.shallow and args.blobless_clone:
+        print(
+            ansi('redf')
+            + "'--shallow' and '--blobless-clone' are mutually exclusive options"
+            + ansi('reset'),
+            file=sys.stderr,
+        )
+        return 1
     jobs = generate_jobs(repos, args)
     add_dependencies(jobs)
 
