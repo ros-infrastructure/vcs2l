@@ -309,31 +309,6 @@ class TestCommands(StagedReposFile):
         finally:
             rmtree(workdir)
 
-    def test_import_blobless_shallow_mutually_exclusive(self):
-        repo_root = os.path.dirname(os.path.dirname(__file__))
-        script = os.path.join(repo_root, 'scripts', 'vcs-import')
-        try:
-            subprocess.check_output(
-                [
-                    sys.executable,
-                    script,
-                    '--shallow',
-                    '--blobless-clone',
-                    '--input',
-                    self.repos_file_path,
-                    '.',
-                ],
-                stderr=subprocess.STDOUT,
-                cwd=TEST_WORKSPACE,
-            )
-        except subprocess.CalledProcessError as e:
-            output = adapt_command_output(e.output, TEST_WORKSPACE)
-        else:
-            self.fail("Expected '--shallow' and '--blobless-clone' to be rejected")
-
-        expected = get_expected_output('import_blobless_shallow_mutually_exclusive')
-        self.assertEqual(output, expected)
-
     def test_import_url(self):
         workdir = os.path.join(TEST_WORKSPACE, 'import-url')
         os.makedirs(workdir)

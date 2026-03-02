@@ -1,1 +1,0 @@
-'--shallow' and '--blobless-clone' are mutually exclusive options

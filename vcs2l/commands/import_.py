@@ -58,11 +58,18 @@ def get_parser():
         help="Delete existing directories if they don't contain the "
         'repository being imported',
     )
-    group.add_argument(
+    clone_type_group = group.add_mutually_exclusive_group()
+    clone_type_group.add_argument(
         '--shallow',
         action='store_true',
         default=False,
         help='Create a shallow clone without a history',
+    )
+    clone_type_group.add_argument(
+        '--blobless-clone',
+        action='store_true',
+        default=False,
+        help='Only clone the commit history first, then checkout to the target version to obtain files',
     )
     group.add_argument(
         '--recursive',
@@ -83,12 +90,6 @@ def get_parser():
         default=False,
         help="Don't overwrite existing directories or change custom checkouts "
         'in repos using the same URL (but fetch repos with same URL)',
-    )
-    group.add_argument(
-        '--blobless-clone',
-        action='store_true',
-        default=False,
-        help='Only clone the commit history first, then checkout to the target version to obtain files',
     )
 
     return parser
@@ -264,15 +265,6 @@ def main(args=None, stdout=None, stderr=None):
         print(ansi('redf') + str(e) + ansi('reset'), file=sys.stderr)
         return 1
 
-    # check if both '--shallow' and '--blobless-clone' options are used, since they are mutually exclusive
-    if args.shallow and args.blobless_clone:
-        print(
-            ansi('redf')
-            + "'--shallow' and '--blobless-clone' are mutually exclusive options"
-            + ansi('reset'),
-            file=sys.stderr,
-        )
-        return 1
     jobs = generate_jobs(repos, args)
     add_dependencies(jobs)
 
