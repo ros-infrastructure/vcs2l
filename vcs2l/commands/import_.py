@@ -19,7 +19,15 @@ class ImportCommand(Command):
     command = 'import'
     help = 'Import the list of repositories'
 
-    def __init__(self, args, url, version=None, recursive=False, shallow=False):
+    def __init__(
+        self,
+        args,
+        url,
+        version=None,
+        recursive=False,
+        shallow=False,
+        blobless_clone=False,
+    ):
         super(ImportCommand, self).__init__(args)
         self.url = url
         self.version = version
@@ -28,6 +36,7 @@ class ImportCommand(Command):
         self.skip_existing = args.skip_existing
         self.recursive = recursive
         self.shallow = shallow
+        self.blobless_clone = blobless_clone
 
 
 def get_parser():
@@ -49,11 +58,18 @@ def get_parser():
         help="Delete existing directories if they don't contain the "
         'repository being imported',
     )
-    group.add_argument(
+    clone_type_group = group.add_mutually_exclusive_group()
+    clone_type_group.add_argument(
         '--shallow',
         action='store_true',
         default=False,
         help='Create a shallow clone without a history',
+    )
+    clone_type_group.add_argument(
+        '--blobless-clone',
+        action='store_true',
+        default=False,
+        help='Only clone the commit history first, then checkout to the target version to obtain files',
     )
     group.add_argument(
         '--recursive',
@@ -207,6 +223,7 @@ def generate_jobs(repos, args):
             str(repo['version']) if 'version' in repo else None,
             recursive=args.recursive,
             shallow=args.shallow,
+            blobless_clone=args.blobless_clone,
         )
         job = {'client': client, 'command': command}
         jobs.append(job)
@@ -247,6 +264,7 @@ def main(args=None, stdout=None, stderr=None):
     except (RuntimeError, request.URLError) as e:
         print(ansi('redf') + str(e) + ansi('reset'), file=sys.stderr)
         return 1
+
     jobs = generate_jobs(repos, args)
     add_dependencies(jobs)
 

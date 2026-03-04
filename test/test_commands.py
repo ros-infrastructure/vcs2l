@@ -270,6 +270,45 @@ class TestCommands(StagedReposFile):
         finally:
             rmtree(workdir)
 
+    def test_import_blobless(self):
+        workdir = os.path.join(TEST_WORKSPACE, 'import-blobless')
+        os.makedirs(workdir)
+        try:
+            output = run_command(
+                'import',
+                ['--blobless-clone', '--input', self.repos_file_path, '.'],
+                subfolder='import-blobless',
+            )
+            # the actual output contains absolute paths
+            output = output.replace(
+                b'repository in ' + workdir.encode() + b'/', b'repository in ./'
+            )
+            expected = get_expected_output('import_blobless')
+            # newer git versions don't append ... after the commit hash
+            assert output == expected or output == expected.replace(b'... ', b' ')
+
+            git_repos = [
+                os.path.join(workdir, 'immutable', 'hash'),
+                os.path.join(workdir, 'immutable', 'tag'),
+                os.path.join(workdir, 'vcs2l'),
+                os.path.join(workdir, 'without_version'),
+            ]
+            for repo_path in git_repos:
+                partial_filter = subprocess.check_output(
+                    ['git', 'config', '--get', 'remote.origin.partialclonefilter'],
+                    stderr=subprocess.STDOUT,
+                    cwd=repo_path,
+                ).strip()
+                self.assertEqual(partial_filter, b'blob:none')
+                promisor = subprocess.check_output(
+                    ['git', 'config', '--get', 'remote.origin.promisor'],
+                    stderr=subprocess.STDOUT,
+                    cwd=repo_path,
+                ).strip()
+                self.assertEqual(promisor, b'true')
+        finally:
+            rmtree(workdir)
+
     def test_import_url(self):
         workdir = os.path.join(TEST_WORKSPACE, 'import-url')
         os.makedirs(workdir)
