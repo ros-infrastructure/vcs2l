@@ -456,6 +456,8 @@ class GitClient(VcsClientBase):
                         'origin',
                         command.version,
                     ]
+                    if command.blobless_clone:
+                        cmd_fetch_hash.append('--filter=blob:none')
                     result_fetch_hash = self._run_command(
                         cmd_fetch_hash, retry=command.retry
                     )
