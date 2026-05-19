@@ -90,6 +90,171 @@ The `import` command also supports input in the [rosinstall file format](http://
 
 Only for this command vcs2l supports the pseudo clients `tar` and `zip` which fetch a tarball / zipfile from a URL and unpack its content. For those two types the `version` key is optional. If specified only entries from the archive which are in the subfolder specified by the version value are being extracted.
 
+### Import with extends functionality
+
+The `vcs import` command supports an `extends` key at the top level of the YAML file. The value of that key is a path or URL to another YAML file which is imported first.
+This base file can itself also contain the key to chain multiple files. The extension to this base file is given precedence over the parent in case of duplicate repository entries.
+
+#### Normal Extension
+
+For instance, consider the following two files:
+
+- **`base.repos`**: contains three repositories `vcs2l`, `immutable/hash` and `immutable/tag`, checked out at specific versions.
+
+   ```yaml
+   ---
+   repositories:
+     vcs2l:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: main
+     immutable/hash:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 377d5b3d03c212f015cc832fdb368f4534d0d583
+     immutable/tag:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 1.1.3
+   ```
+
+- **`base_extension.repos`**: extends the base file and overrides the version of `immutable/hash` and `immutable/tag` repositories.
+
+   ```yaml
+   ---
+   extends: base.repos
+   repositories:
+     immutable/hash:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 25e4ae2f1dd28b0efcd656f4b1c9679d8a7d6c22
+     immutable/tag:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 1.1.5
+   ```
+The resulting extension import would import vcs2l at version `main`, `immutable/hash` at version `25e4ae2` and `immutable/tag` at version `1.1.5`.
+
+#### Multiple Extensions
+
+The `extends` key also supports a list of files to extend from. The files are imported in the order they are specified and the precedence is given to the last file in case of duplicate repository entries.
+
+For instance, consider the following three files:
+
+- **`base_1.repos`**: contains two repositories `vcs2l` and `immutable/hash`, checked out at `1.1.3`.
+
+   ```yaml
+   ---
+   repositories:
+    immutable/hash:
+      type: git
+      url: https://github.com/ros-infrastructure/vcs2l.git
+      version: e700793cb2b8d25ce83a611561bd167293fd66eb  # 1.1.3
+     vcs2l:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 1.1.3
+    ```
+
+- **`base_2.repos`**: contains two repositories `vcs2l` and `immutable/hash`, checked out at `1.1.4`.
+
+   ```yaml
+   ---
+   repositories:
+    immutable/hash:
+      type: git
+      url: https://github.com/ros-infrastructure/vcs2l.git
+      version: 2c7ff89d12d8a77c36b60d1f7ba3039cdd3f742b  # 1.1.4
+     vcs2l:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 1.1.4
+  ```
+
+- **`multiple_extension.repos`**: extends both base files and overrides the version of `vcs2l` repository.
+
+   ```yaml
+   ---
+   extends:
+     - base_1.repos  # Lower priority
+     - base_2.repos  # Higher priority
+   repositories:
+     vcs2l:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 1.1.5
+   ```
+
+The resulting extension import would import `immutable/hash` at version `1.1.4` (from `base_2.repos`) and `vcs2l` at version `1.1.5`.
+
+Duplicate file names in the `extends` list are not allowed and would raise the following error:
+
+```bash
+Duplicate entries found in extends in file: <relative-path>/multiple_extension.repos
+```
+
+#### Circular Loop Protection
+
+In order to avoid infinite loops in case of circular imports the tool detects already imported files and raises an error if such a file is encountered again.
+
+For instance, consider the following two files:
+
+- **`loop_base.repos`**: extends the `loop_extension.repos` file, and contains two repositories `vcs2l` and `immutable/tag`.
+
+   ```yaml
+   ---
+   extends: loop_extension.repos
+   repositories:
+     vcs2l:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: main
+     immutable/tag:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 1.1.3
+   ```
+
+- **`loop_extension.repos`**: extends the `loop_base.repos` file, and modifies the version of `immutable/tag` with `1.1.5`.
+
+   ```yaml
+   ---
+   extends: loop_base.repos
+   repositories:
+     immutable/tag:
+       type: git
+       url: https://github.com/ros-infrastructure/vcs2l.git
+       version: 1.1.5
+   ```
+The resulting extension import would prevent the download and raise the following error:
+
+```bash
+Circular import detected: <relative-path>/loop_extension.repos
+```
+
+#### File path behaviour
+
+Currently there are two ways to specify the path to the repository file passed to `vcs import`:
+
+1. **Recommended**: Using `--input`.
+
+   * For instance: `vcs import --input my.repos <destination-path>`
+
+   * The extended files are searched relative to the file containing the `extends` key.
+
+   * You do not require to be in the same directory as `my.repos` to run the command.
+
+2. Using the input redirection operator `<` to pass a local file path via `stdin`.
+
+   * For instance: `vcs import < my.repos <destination-path>`
+
+   * The extended files are searched relative to the current working directory.
+
+   * Therefore, you have to be in the **same** directory as `my.repos` to run the command.
+
+     The files being directly extended by the file provided through `stdin` are relative to the current working directory.
+     Any other file being extended is relative to the file extending it.
+
 ### Delete set of repositories
 
 The `vcs delete` command removes all directories of repositories which are passed in via `stdin` in YAML format.
