@@ -194,6 +194,66 @@ class BzrClient(VcsClientBase):
         result['output'] = branch
         return result
 
+    def export_repository(self, version, basepath):
+        """Export the bzr repository at a given version to a tar.gz file."""
+        self._check_executable()
+
+        # Construct the bzr export command
+        cmd = [BzrClient._executable, 'export', '--format=tgz', basepath + '.tar.gz']
+
+        if version:
+            cmd.append('--revision')
+            cmd.append(version)
+
+        result = self._run_command(cmd)
+
+        return result['returncode'] == 0
+
+    def checkout(self, url, version=None, verbose=False, shallow=False, timeout=None):
+        """Creates a local Bazaar branch from a remote repository."""
+        if url is None or url.strip() == '':
+            raise ValueError('Invalid empty url: "%s"' % url)
+
+        # Check if directory exists and is not empty
+        if os.path.exists(self.path) and os.listdir(self.path):
+            raise RuntimeError('Target path exists and is not empty: %s' % self.path)
+
+        # Create parent directory if it doesn't exist, but not the target directory itself
+        # This is because 'bzr branch' will create the target directory.
+        parent_dir = os.path.dirname(self.path)
+        if parent_dir and not os.path.exists(parent_dir):
+            result = self._create_path()
+            if result and result.get('returncode'):
+                return False
+
+        self._check_executable()
+
+        # Build the branch command
+        cmd = ['bzr', 'branch']
+
+        if verbose:
+            cmd.append('--verbose')
+
+        if version:
+            cmd.extend(['--revision', str(version)])
+
+        # let bzr create the target directory
+        cmd.extend([url, self.path])
+
+        # Run the command with proper timeout handling
+        try:
+            result = self._run_command(cmd)
+        except Exception as e:
+            print('Branch command failed with exception: %s' % str(e))
+            return False
+
+        if result['returncode'] != 0:
+            error_msg = result.get('output', 'Unknown error')
+            print('Branch failed: %s' % error_msg)
+            return False
+
+        return True
+
     def _check_executable(self):
         assert BzrClient._executable is not None, "Could not find 'bzr' executable"
 
