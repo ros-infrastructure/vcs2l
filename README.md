@@ -318,7 +318,7 @@ If the command should work on multiple repositories make sure to pass only gener
 
 # How to install vcs2l?
 
-On Debian-based platforms the recommended method is to configure the repository and install the package *python3-vcs2l* by running:
+On Debian-based platforms the recommended method is to configure the ROS repository and install the package *python3-vcs2l* by running:
 
 ```bash
 sudo apt update && sudo apt install curl -y
