@@ -320,7 +320,7 @@ If the command should work on multiple repositories make sure to pass only gener
 
 On Debian-based platforms the recommended method is to install the package *python3-vcs2l*. On Ubuntu this is done using *apt-get*:
 
-If you are using [ROS](https://www.ros.org/) you can get the package directly from the ROS repository:
+If you are using [ROS](https://www.ros.org/) you can get the package running:
 
 ```bash
   sudo apt update && sudo apt install curl -y
