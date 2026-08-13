@@ -4,6 +4,7 @@ from io import BytesIO
 from urllib.error import URLError
 
 from vcs2l.clients.vcs_base import VcsClientBase, load_url, test_url
+from vcs2l.errors import Vcs2lError
 from vcs2l.util import rmtree
 
 
@@ -113,3 +114,9 @@ class TarClient(VcsClientBase):
             'output': "Tarball url '%s' exists" % command.url,
             'returncode': None,
         }
+
+    def export_repository(self, version, basepath):
+        raise Vcs2lError('export repository not implemented for extracted tars')
+
+    def checkout(self, url, version=None, verbose=False, shallow=False, timeout=None):
+        raise Vcs2lError('checkout not implemented for extracted tars.')
