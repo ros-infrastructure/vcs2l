@@ -7,7 +7,9 @@ from io import StringIO
 
 import vcs2l.executor as executor
 from vcs2l.clients.git import GitClient
+from vcs2l.commands.import_ import main as import_main
 from vcs2l.commands.pull import main
+from vcs2l.commands.validate import main as validate_main
 from vcs2l.util import rmtree
 
 from . import StagedReposFile, StagedReposFile2, to_file_url
@@ -564,3 +566,35 @@ def get_expected_output(name):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestDirectMainCall(StagedReposFile):
+    def setUp(self):
+        super().setUp()
+        self.stdout = StringIO()
+        self.stderr = StringIO()
+
+    def test_validate_main_with_file(self):
+        rc = validate_main(
+            args=['--input', self.repos_file_path],
+            stdout=self.stdout,
+            stderr=self.stderr,
+        )
+        self.assertEqual(rc, 0)
+
+    def test_import_main_with_file(self):
+        workdir = os.path.join(TEST_WORKSPACE, 'import-direct-file')
+        os.makedirs(workdir, exist_ok=True)
+
+        cwd_bck = os.getcwd()
+        os.chdir(workdir)
+        try:
+            rc = import_main(
+                args=['--input', self.repos_file_path, '.'],
+                stdout=self.stdout,
+                stderr=self.stderr,
+            )
+            self.assertEqual(rc, 0)
+        finally:
+            os.chdir(cwd_bck)
+            rmtree(workdir)
