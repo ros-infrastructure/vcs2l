@@ -829,60 +829,56 @@ class GitClient(VcsClientBase):
         if os.path.exists(self.path) and os.listdir(self.path):
             raise RuntimeError(f'Target path exists and is not empty: {self.path}')
 
-            # Create parent directories
-            try:
-                os.makedirs(self.path, exist_ok=True)
-            except OSError:
-                return False
-
+        # Create parent directories
         try:
-            cmd_clone = [GitClient._executable, 'clone']
+            os.makedirs(self.path, exist_ok=True)
+        except OSError:
+            return False
 
-            if shallow:
-                cmd_clone.extend(['--depth', '1'])
-                if self.get_git_version() >= [1, 7, 10]:
-                    cmd_clone.append('--no-single-branch')
+        cmd_clone = [GitClient._executable, 'clone']
 
-            if version is None:
-                cmd_clone.append('--recursive')
+        if shallow:
+            cmd_clone.extend(['--depth', '1'])
+            if self.get_git_version() >= [1, 7, 10]:
+                cmd_clone.append('--no-single-branch')
 
-            cmd_clone.extend([url, '.'])
+        if version is None:
+            cmd_clone.append('--recursive')
 
-            result_clone = self._run_command(cmd_clone)
-            if result_clone['returncode']:
-                return False
+        cmd_clone.extend([url, '.'])
 
-            # Checkout specific version if provided
-            if version:
-                cmd_checkout = [GitClient._executable, 'checkout', version]
-                result_checkout = self._run_command(cmd_checkout)
+        result_clone = self._run_command(cmd_clone, timeout=timeout)
+        if result_clone['returncode']:
+            return False
+
+        # Checkout specific version if provided
+        if version:
+            cmd_checkout = [GitClient._executable, 'checkout', version]
+            result_checkout = self._run_command(cmd_checkout, timeout=timeout)
+
+            if result_checkout['returncode']:
+                # Try fetching all refs first
+                cmd_fetch = [GitClient._executable, 'fetch', '--all', '--tags']
+                result_fetch = self._run_command(cmd_fetch, timeout=timeout)
+                if result_fetch['returncode'] == 0:
+                    result_checkout = self._run_command(cmd_checkout, timeout=timeout)
 
                 if result_checkout['returncode']:
-                    # Try fetching all refs first
-                    cmd_fetch = [GitClient._executable, 'fetch', '--all', '--tags']
-                    result_fetch = self._run_command(cmd_fetch)
-                    if result_fetch['returncode'] == 0:
-                        result_checkout = self._run_command(cmd_checkout)
-
-                    if result_checkout['returncode']:
-                        return False
-
-                # Update submodules after version checkout
-                cmd_submodules = [
-                    GitClient._executable,
-                    'submodule',
-                    'update',
-                    '--init',
-                    '--recursive',
-                ]
-                result_submodules = self._run_command(cmd_submodules)
-                if result_submodules['returncode']:
                     return False
 
-            return True
+            # Update submodules after version checkout
+            cmd_submodules = [
+                GitClient._executable,
+                'submodule',
+                'update',
+                '--init',
+                '--recursive',
+            ]
+            result_submodules = self._run_command(cmd_submodules, timeout=timeout)
+            if result_submodules['returncode']:
+                return False
 
-        except Exception:
-            return False
+        return True
 
     def _check_executable(self):
         assert GitClient._executable is not None, "Could not find 'git' executable"

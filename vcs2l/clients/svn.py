@@ -349,7 +349,7 @@ class SvnClient(VcsClientBase):
         # Add URL and target directory
         cmd.extend([url, '.'])
 
-        result = self._run_command(cmd)
+        result = self._run_command(cmd, timeout=timeout)
 
         if result['returncode']:
             if result['output']:

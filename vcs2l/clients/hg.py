@@ -389,34 +389,24 @@ class HgClient(VcsClientBase):
             except OSError:
                 return False
 
-        try:
-            # Clone repository
-            cmd_clone = [HgClient._executable, 'clone', url, self.path]
-            result_clone = self._run_command(cmd_clone)
+        # Clone repository
+        cmd_clone = [HgClient._executable, 'clone', url, self.path]
+        result_clone = self._run_command(cmd_clone, timeout=timeout)
 
-            if result_clone['returncode'] != 0:
-                print(
-                    "Could not clone repository '%s': %s"
-                    % (url, result_clone['output'])
-                )
+        if result_clone['returncode'] != 0:
+            print(f"Could not clone repository '{url}': {result_clone['output']}")
+            return False
+
+        # Checkout specific version if provided
+        if version and version.strip():
+            cmd_checkout = [HgClient._executable, 'update', version.strip()]
+            result_checkout = self._run_command(cmd_checkout, timeout=timeout)
+
+            if result_checkout['returncode'] != 0:
+                print(f"Could not checkout '{version}': {result_checkout['output']}")
                 return False
 
-            # Checkout specific version if provided
-            if version and version.strip():
-                cmd_checkout = [HgClient._executable, 'update', version.strip()]
-                result_checkout = self._run_command(cmd_checkout)
-
-                if result_checkout['returncode'] != 0:
-                    print(
-                        "Could not checkout '%s': %s"
-                        % (version, result_checkout['output'])
-                    )
-                    return False
-
-            return True
-
-        except Exception:
-            return False
+        return True
 
     def _check_executable(self):
         assert HgClient._executable is not None, "Could not find 'hg' executable"

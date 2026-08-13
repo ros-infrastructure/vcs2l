@@ -241,11 +241,7 @@ class BzrClient(VcsClientBase):
         cmd.extend([url, self.path])
 
         # Run the command with proper timeout handling
-        try:
-            result = self._run_command(cmd)
-        except Exception as e:
-            print('Branch command failed with exception: %s' % str(e))
-            return False
+        result = self._run_command(cmd, timeout=timeout)
 
         if result['returncode'] != 0:
             error_msg = result.get('output', 'Unknown error')

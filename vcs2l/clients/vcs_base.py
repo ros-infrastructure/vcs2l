@@ -6,6 +6,7 @@ import time
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from vcs2l.errors import Vcs2lError
 from vcs2l.executor import ansi
 
 
@@ -36,7 +37,7 @@ class VcsClientBase(object):
             'returncode': NotImplemented,
         }
 
-    def _run_command(self, cmd, env=None, retry=0):
+    def _run_command(self, cmd, env=None, retry=0, timeout=None):
         for i in range(retry + 1):
             if i > 0:
                 print(
@@ -45,7 +46,15 @@ class VcsClientBase(object):
                     + ansi('reset'),
                     file=sys.stderr,
                 )
-            result = run_command(cmd, os.path.abspath(self.path), env=env)
+            try:
+                result = run_command(
+                    cmd, os.path.abspath(self.path), env=env, timeout=timeout
+                )
+            except Exception as e:
+                raise Vcs2lError(
+                    f"Unexpected error while running command '{' '.join(cmd)}' "
+                    f'in {self.path}: {e}'
+                ) from e
             if not result['returncode']:
                 # return successful result
                 break
@@ -105,7 +114,7 @@ class VcsClientBase(object):
         )
 
 
-def run_command(cmd, cwd, env=None):
+def run_command(cmd, cwd, env=None, timeout=None):
     if not os.path.exists(cwd):
         cwd = None
     result = {'cmd': ' '.join(cmd), 'cwd': cwd}
@@ -113,7 +122,18 @@ def run_command(cmd, cwd, env=None):
         proc = subprocess.Popen(
             cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env
         )
-        output, _ = proc.communicate()
+        try:
+            output, _ = proc.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            output, _ = proc.communicate()
+            partial_output = output.rstrip().decode('utf8')
+            message = f'Command timed out after {timeout} seconds'
+            if partial_output:
+                message += f': {partial_output}'
+            result['output'] = message
+            result['returncode'] = proc.returncode or 1
+            return result
         result['output'] = output.rstrip().decode('utf8')
         result['returncode'] = proc.returncode
     except subprocess.CalledProcessError as e:
