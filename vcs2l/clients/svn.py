@@ -331,7 +331,7 @@ class SvnClient(VcsClientBase):
 
         # Check if directory exists and is not empty
         if os.path.exists(self.path) and os.listdir(self.path):
-            raise RuntimeError('Target path exists and is not empty: %s' % self.path)
+            raise RuntimeError(f'Target path exists and is not empty: {self.path}')
 
         # Create the directory if it doesn't exist
         not_exist = self._create_path()

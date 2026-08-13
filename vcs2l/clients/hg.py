@@ -377,13 +377,9 @@ class HgClient(VcsClientBase):
 
         self._check_executable()
 
-        # Check if path exists and handle accordingly
-        if os.path.exists(self.path):
-            if os.path.isdir(self.path):
-                if os.listdir(self.path):
-                    return False
-            else:
-                return False
+        # Check if directory exists and is not empty
+        if os.path.exists(self.path) and os.listdir(self.path):
+            raise RuntimeError(f'Target path exists and is not empty: {self.path}')
 
         # Ensure parent directory exists
         parent_dir = os.path.dirname(self.path)

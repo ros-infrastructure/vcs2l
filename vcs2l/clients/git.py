@@ -825,14 +825,10 @@ class GitClient(VcsClientBase):
 
         self._check_executable()
 
-        if os.path.exists(self.path):
-            if os.path.isdir(self.path):
-                # Check if directory is empty
-                if os.listdir(self.path):
-                    return False
-            else:
-                return False
-        else:
+        # Check if directory exists and is not empty
+        if os.path.exists(self.path) and os.listdir(self.path):
+            raise RuntimeError(f'Target path exists and is not empty: {self.path}')
+
             # Create parent directories
             try:
                 os.makedirs(self.path, exist_ok=True)

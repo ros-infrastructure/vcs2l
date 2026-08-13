@@ -216,7 +216,7 @@ class BzrClient(VcsClientBase):
 
         # Check if directory exists and is not empty
         if os.path.exists(self.path) and os.listdir(self.path):
-            raise RuntimeError('Target path exists and is not empty: %s' % self.path)
+            raise RuntimeError(f'Target path exists and is not empty: {self.path}')
 
         # Create parent directory if it doesn't exist, but not the target directory itself
         # This is because 'bzr branch' will create the target directory.

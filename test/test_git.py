@@ -58,7 +58,7 @@ class TestGitCheckout(StagedReposFile):
             self.assertTrue(os.path.isdir(os.path.join(dest, '.git')))
 
     def test_nonempty_dir(self):
-        """Checkout into a non-empty directory should return False."""
+        """Checkout into a non-empty directory should raise RuntimeError."""
         with TemporaryDirectory(suffix='.git_checkout') as tmp:
             dest = os.path.join(tmp, 'repo')
             os.makedirs(dest)
@@ -69,8 +69,8 @@ class TestGitCheckout(StagedReposFile):
             client = GitClient(dest)
             url = to_file_url(os.path.join(self.temp_dir.name, 'gitrepo'))
 
-            result = client.checkout(url)
-            self.assertFalse(result)
+            with self.assertRaises(RuntimeError):
+                client.checkout(url)
 
     def test_invalid_version(self):
         """Checkout with a non-existent version should return False."""
