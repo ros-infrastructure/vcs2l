@@ -102,7 +102,9 @@ class TestCommands(StagedReposFile):
 
     def test_pull(self):
         output = run_command('pull', args=['--workers', '1'])
-        expected = get_expected_output('pull')
+        # the first pull after import also fetches the default branch and reachable tags,
+        # since a bare hash/tag fetch doesn't retrieve any tags on its own
+        expected = get_expected_output('pull_first')
         # replace message from older git versions
         output = output.replace(
             b'anch. Please specify which\nbranch you want to merge with. See',
@@ -530,12 +532,12 @@ def adapt_command_output(output, cwd=None):
     )
     # normalize temporary path locations
     output = re.sub(rb'file://.*\.vcstmp', b'file:///vcstmp', output)
+    if cwd:
+        # `git init` (used for precise hash/tag clones) prints the absolute
+        # path to the repo, hence make it relative
+        cwd_abs = os.path.abspath(cwd).replace('\\', '/')
+        output = output.replace(cwd_abs.encode(), b'.')
     if sys.platform == 'win32':
-        if cwd:
-            # on Windows, git prints full path to repos
-            # in some messages, so make it relative
-            cwd_abs = os.path.abspath(cwd).replace('\\', '/')
-            output = output.replace(cwd_abs.encode(), b'.')
         # replace path separators in specific paths;
         # this is less likely to cause wrong test results
         paths_to_replace = [
