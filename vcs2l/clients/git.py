@@ -419,23 +419,13 @@ class GitClient(VcsClientBase):
                     return result_version_type
                 version_type = result_version_type['version_type']
 
-            if not command.shallow or version_type in (None, 'branch'):
+            if version_type in (None, 'branch'):
                 cmd_clone = [GitClient._executable, 'clone', command.url, '.']
                 if command.blobless_clone:
                     cmd_clone += ['--filter=blob:none']
-                    if version_type == 'branch':
-                        cmd_clone += ['-b', version_name]
-                        checkout_version = None
-                    elif command.version:
-                        cmd_clone.append('--no-checkout')
-                        checkout_version = command.version
-                    else:
-                        checkout_version = None
-                elif version_type == 'branch':
+                if version_type == 'branch':
                     cmd_clone += ['-b', version_name]
-                    checkout_version = None
-                else:
-                    checkout_version = command.version
+                checkout_version = None
                 if command.shallow:
                     cmd_clone += ['--depth', '1']
                 result_clone = self._run_command(cmd_clone, retry=command.retry)
@@ -447,26 +437,10 @@ class GitClient(VcsClientBase):
                     return result_clone
                 cmd = result_clone['cmd']
                 output = result_clone['output']
-
-                # For non-shallow clones with commit hashes, fetch the specific commit
-                if not command.shallow and version_type == 'hash':
-                    cmd_fetch_hash = [
-                        GitClient._executable,
-                        'fetch',
-                        'origin',
-                        command.version,
-                    ]
-                    if command.blobless_clone:
-                        cmd_fetch_hash.append('--filter=blob:none')
-                    result_fetch_hash = self._run_command(
-                        cmd_fetch_hash, retry=command.retry
-                    )
-                    if result_fetch_hash['returncode']:
-                        return result_fetch_hash
-                    cmd += ' && ' + ' '.join(cmd_fetch_hash)
-                    output = '\n'.join([output, result_fetch_hash['output']])
             else:
-                # getting a hash or tag with a depth of 1 can't use 'clone'
+                # getting a precise hash or tag doesn't require a full clone,
+                # fetching just the ref avoids downloading
+                # the rest of the repository's history
                 cmd_init = [GitClient._executable, 'init']
                 result_init = self._run_command(cmd_init)
                 if result_init['returncode']:
@@ -488,6 +462,8 @@ class GitClient(VcsClientBase):
                 output = '\n'.join([output, result_remote_add['output']])
 
                 cmd_fetch = [GitClient._executable, 'fetch', 'origin']
+                if command.blobless_clone:
+                    cmd_fetch.append('--filter=blob:none')
                 if version_type == 'hash':
                     cmd_fetch.append(command.version)
                 elif version_type == 'tag':
@@ -496,7 +472,11 @@ class GitClient(VcsClientBase):
                     )
                 else:
                     assert False
-                cmd_fetch += ['--depth', '1']
+                if command.shallow:
+                    cmd_fetch += ['--depth', '1']
+                elif version_type == 'hash':
+                    # fetching a bare hash doesn't retrieve any tags on its own.
+                    cmd_fetch.append('--tags')
                 result_fetch = self._run_command(cmd_fetch, retry=command.retry)
                 if result_fetch['returncode']:
                     return result_fetch

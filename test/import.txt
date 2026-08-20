@@ -1,8 +1,14 @@
 ......
 === ./immutable/hash (git) ===
-Cloning into '.'...
+Initialized empty Git repository in ./immutable/hash/.git/
+
 From file:///vcstmp/gitrepo
  * branch            5b3504594f7354121cf024dc734bf79e270cffd3 -> FETCH_HEAD
+ * [new tag]         0.1.26     -> 0.1.26
+ * [new tag]         0.1.27     -> 0.1.27
+ * [new tag]         1.1.3      -> 1.1.3
+ * [new tag]         1.1.4      -> 1.1.4
+ * [new tag]         1.1.5      -> 1.1.5
 Note: switching to '5b3504594f7354121cf024dc734bf79e270cffd3'.
 
 You are in 'detached HEAD' state. You can look around, make experimental
@@ -26,7 +32,11 @@ Downloaded tarball from 'file:///vcstmp/archive.tar.gz' and unpacked it
 === ./immutable/hash_zip (zip) ===
 Downloaded zipfile from 'file:///vcstmp/archive.zip' and unpacked it
 === ./immutable/tag (git) ===
-Cloning into '.'...
+Initialized empty Git repository in ./immutable/tag/.git/
+
+From file:///vcstmp/gitrepo
+ * [new tag]         0.1.27     -> 0.1.27
+ * [new tag]         0.1.26     -> 0.1.26
 Note: switching to 'tags/0.1.27'.
 
 You are in 'detached HEAD' state. You can look around, make experimental
