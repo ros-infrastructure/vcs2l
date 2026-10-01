@@ -297,7 +297,10 @@ class GitClient(VcsClientBase):
             return not_exist
 
         if GitClient.is_repository(self.path):
-            if command.skip_existing:
+            skip_checkout = command.skip_existing and not self._run_command(
+                [GitClient._executable, 'rev-parse', '--verify', 'HEAD']
+            )['returncode']
+            if skip_checkout:
                 checkout_version = None
             elif command.version:
                 checkout_version = command.version
@@ -331,7 +334,7 @@ class GitClient(VcsClientBase):
             cmd_fetch = [GitClient._executable, 'fetch', remote]
             if command.blobless_clone:
                 cmd_fetch.append('--filter=blob:none')
-            if command.shallow:
+            if command.shallow and checkout_version is not None:
                 result_version_type, version_name = self._check_version_type(
                     command.url, checkout_version, command.retry
                 )
@@ -351,9 +354,10 @@ class GitClient(VcsClientBase):
                     )
                 else:
                     assert False
-                cmd_fetch += ['--depth', '1']
             else:
                 version_type = None
+            if command.shallow:
+                cmd_fetch += ['--depth', '1']
             result_fetch = self._run_command(cmd_fetch, retry=command.retry)
             if result_fetch['returncode']:
                 return result_fetch

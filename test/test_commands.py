@@ -275,6 +275,91 @@ class TestCommands(StagedReposFile):
         finally:
             rmtree(workdir)
 
+    def test_import_shallow_skip_existing(self):
+        workdir = os.path.join(TEST_WORKSPACE, 'import-shallow-skip')
+        os.makedirs(workdir)
+        try:
+            run_command(
+                'import',
+                ['--shallow', '--input', self.repos_file_path, '.'],
+                subfolder='import-shallow-skip',
+            )
+            versions = {}
+            for name in ('vcs2l', 'without_version', 'immutable/tag', 'immutable/hash'):
+                path = os.path.join(workdir, name)
+                versions[name] = subprocess.check_output(
+                    ['git', 'rev-parse', 'HEAD'], cwd=path
+                )
+                with open(os.path.join(path, 'LICENSE'), 'ab') as stream:
+                    stream.write(b'local edit\n')
+                with open(os.path.join(path, 'untracked'), 'wb') as stream:
+                    stream.write(b'local file\n')
+            subprocess.check_call(
+                ['git', 'checkout', '-b', 'local-fix'],
+                cwd=os.path.join(workdir, 'vcs2l'),
+            )
+            run_command(
+                'import',
+                ['--shallow', '--skip-existing', '--input', self.repos_file_path, '.'],
+                subfolder='import-shallow-skip',
+            )
+            for name, version in versions.items():
+                path = os.path.join(workdir, name)
+                self.assertEqual(
+                    subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=path),
+                    version,
+                )
+                self.assertEqual(
+                    subprocess.check_output(
+                        ['git', 'rev-parse', '--is-shallow-repository'], cwd=path
+                    ).strip(),
+                    b'true',
+                )
+                with open(os.path.join(path, 'LICENSE'), 'rb') as stream:
+                    self.assertTrue(stream.read().endswith(b'local edit\n'))
+                self.assertTrue(os.path.isfile(os.path.join(path, 'untracked')))
+            self.assertEqual(
+                subprocess.check_output(
+                    ['git', 'branch', '--show-current'],
+                    cwd=os.path.join(workdir, 'vcs2l'),
+                ).strip(),
+                b'local-fix',
+            )
+        finally:
+            rmtree(workdir)
+
+    def test_import_shallow_skip_existing_incomplete(self):
+        workdir = os.path.join(TEST_WORKSPACE, 'import-shallow-incomplete')
+        os.makedirs(workdir)
+        try:
+            for name in ('vcs2l', 'without_version', 'immutable/tag', 'immutable/hash'):
+                path = os.path.join(workdir, name)
+                os.makedirs(path)
+                subprocess.check_call(['git', 'init', '--quiet'], cwd=path)
+                subprocess.check_call(
+                    [
+                        'git', 'remote', 'add', 'origin',
+                        to_file_url(os.path.join(self.temp_dir.name, 'gitrepo')),
+                    ],
+                    cwd=path,
+                )
+            run_command(
+                'import',
+                ['--shallow', '--skip-existing', '--input', self.repos_file_path, '.'],
+                subfolder='import-shallow-incomplete',
+            )
+            for name in ('vcs2l', 'without_version', 'immutable/tag', 'immutable/hash'):
+                path = os.path.join(workdir, name)
+                subprocess.check_call(['git', 'rev-parse', '--verify', 'HEAD'], cwd=path)
+                self.assertEqual(
+                    subprocess.check_output(
+                        ['git', 'rev-parse', '--is-shallow-repository'], cwd=path
+                    ).strip(),
+                    b'true',
+                )
+        finally:
+            rmtree(workdir)
+
     def test_import_blobless(self):
         workdir = os.path.join(TEST_WORKSPACE, 'import-blobless')
         os.makedirs(workdir)
