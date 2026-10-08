@@ -98,7 +98,7 @@ def get_parser():
 
 def file_or_url_type(value):
     if os.path.exists(value) or '://' not in value:
-        return argparse.FileType('r')(value)
+        return value
     # use another user agent to avoid getting a 403 (forbidden) error,
     # since some websites blacklist or block unrecognized user agents
     return request.Request(value, headers={'User-Agent': 'vcs2l/' + vcs2l_version})
@@ -331,9 +331,15 @@ def main(args=None, stdout=None, stderr=None):
     try:
         input_ = args.input
         if isinstance(input_, request.Request):
-            input_ = request.urlopen(input_)
-        repos = get_repositories(input_)
-    except (RuntimeError, request.URLError) as e:
+            with request.urlopen(input_) as f:
+                f.name = f.geturl()
+                repos = get_repositories(f)
+        elif input_ == '-':
+            repos = get_repositories(sys.stdin)
+        else:
+            with open(input_, 'r', encoding='utf-8') as f:
+                repos = get_repositories(f)
+    except (RuntimeError, request.URLError, FileNotFoundError) as e:
         print(ansi('redf') + str(e) + ansi('reset'), file=sys.stderr)
         return 1
 
