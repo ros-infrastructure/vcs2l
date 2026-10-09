@@ -2,7 +2,7 @@
 === hg/branch (hg) ===
 Found hg repository 'file:///vcstmp/hgrepo' with changeset 'stable'
 === hg/hash (hg) ===
-Found hg repository 'file:///vcstmp/hgrepo' with changeset '9bd654917508'
+Found hg repository 'file:///vcstmp/hgrepo' with changeset '27ff6a32cacf'
 === hg/tag (hg) ===
 Found hg repository 'file:///vcstmp/hgrepo' with changeset '5.8'
 === svn/rev (svn) ===
