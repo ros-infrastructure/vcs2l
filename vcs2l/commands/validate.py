@@ -25,7 +25,7 @@ def get_parser():
         description='Validate a repositories file', prog='vcs validate'
     )
     group = parser.add_argument_group('"validate" command parameters')
-    group.add_argument('--input', type=argparse.FileType('r'), default='-')
+    group.add_argument('--input', type=str, default='-')
     group.add_argument(
         '--retry',
         type=int,
@@ -68,8 +68,12 @@ def main(args=None, stdout=None, stderr=None):
     add_common_arguments(parser, skip_nested=True, path_nargs=False)
     args = parser.parse_args(args)
     try:
-        repos = get_repositories(args.input)
-    except RuntimeError as e:
+        if args.input == '-':
+            repos = get_repositories(sys.stdin)
+        else:
+            with open(args.input, 'r', encoding='utf-8') as f:
+                repos = get_repositories(f)
+    except (RuntimeError, FileNotFoundError) as e:
         print(ansi('redf') + str(e) + ansi('reset'), file=sys.stderr)
         return 1
 
