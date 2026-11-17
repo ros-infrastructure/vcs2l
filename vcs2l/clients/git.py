@@ -28,7 +28,9 @@ class GitClient(VcsClientBase):
 
     @staticmethod
     def is_repository(path):
-        return os.path.isdir(os.path.join(path, '.git'))
+        # .git is a file ("gitdir: <path>") in linked worktrees, absorbed
+        # submodules and clones made with --separate-git-dir
+        return os.path.exists(os.path.join(path, '.git'))
 
     def __init__(self, path):
         super(GitClient, self).__init__(path)
